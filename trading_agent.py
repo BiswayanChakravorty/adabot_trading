@@ -242,7 +242,7 @@ Respond with ONLY JSON:
         response = client.chat.completions.create(
             model=GROQ_MODEL,
             messages=[{"role": "user", "content": prompt}],
-            response_format={"type": "json_object"},
+            response_format={"type": "json_schema", "json_schema": {"name": "trade_idea", "strict": true, "schema": {"type": "object", "properties": {"asset": {"type": ["string", "null"]}, "action": {"type": "string", "enum": ["BUY", "SKIP"]}, "entry_price": {"type": ["number", "null"]}, "rationale": {"type": "string"}}, "required": ["asset", "action", "entry_price", "rationale"], "additionalProperties": false}}},
         )
         content = (response.choices[0].message.content or "").strip()
         return validate_trade_idea(json.loads(content), market_df)
