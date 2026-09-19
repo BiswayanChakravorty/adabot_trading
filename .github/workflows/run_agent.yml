@@ -26,6 +26,9 @@ jobs:
       - name: Install dependencies
         run: python -m pip install --disable-pip-version-check -r requirements.txt
 
+      - name: Compile Python sources
+        run: python -m compileall -q .
+
       - name: Run tests
         env:
           PYTHONPATH: .
