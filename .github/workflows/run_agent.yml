@@ -58,7 +58,7 @@ jobs:
           git config user.name "trading-agent-bot"
           git config user.email "actions@github.com"
           if [ -f trading_agent_log.jsonl ]; then
-            git add trading_agent_log.jsonl
+            git add trading_agent_log.jsonl dashboard_data.json
             if ! git diff --cached --quiet; then
               git commit -m "Log: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
               git push
