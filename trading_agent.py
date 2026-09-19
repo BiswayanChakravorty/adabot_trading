@@ -53,7 +53,7 @@ MAX_ENTRY_DEVIATION_PCT = 0.05
 LOG_FILE = "trading_agent_log.jsonl"
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
-GROQ_MODEL = "llama-3.3-70b-versatile"
+GROQ_MODEL = "openai/gpt-oss-120b"
 ALERT_EMAIL_FROM = os.getenv("ALERT_EMAIL_FROM", "")
 ALERT_EMAIL_TO = os.getenv("ALERT_EMAIL_TO", "")
 ALERT_EMAIL_PASSWORD = os.getenv("ALERT_EMAIL_PASSWORD", "")
