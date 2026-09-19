@@ -274,29 +274,31 @@ def calculate_risk_parameters(
     entry_price: float,
     capital_to_invest: float | None = None,
 ) -> dict:
-    if entry_price <= 0:
-        raise ValueError("entry_price must be positive")
+    entry_price = _positive_float(entry_price, "entry_price")
 
-    if TOTAL_CAPITAL_INR <= 0:
-        raise ValueError("TOTAL_CAPITAL_INR must be positive")
-    if PER_TRADE_ALLOCATION_INR <= 0:
-        raise ValueError("PER_TRADE_ALLOCATION_INR must be positive")
-    if PER_TRADE_ALLOCATION_INR > TOTAL_CAPITAL_INR:
+    total_capital = _positive_float(TOTAL_CAPITAL_INR, "TOTAL_CAPITAL_INR")
+    per_trade = _positive_float(
+        PER_TRADE_ALLOCATION_INR, "PER_TRADE_ALLOCATION_INR"
+    )
+    if per_trade > total_capital:
         raise ValueError("PER_TRADE_ALLOCATION_INR cannot exceed TOTAL_CAPITAL_INR")
 
     if capital_to_invest is None:
-        capital_to_invest = min(PER_TRADE_ALLOCATION_INR, TOTAL_CAPITAL_INR)
-    if capital_to_invest <= 0:
-        raise ValueError("capital_to_invest must be positive")
-    if capital_to_invest > TOTAL_CAPITAL_INR:
+        capital_to_invest = min(per_trade, total_capital)
+    else:
+        capital_to_invest = _positive_float(
+            capital_to_invest, "capital_to_invest"
+        )
+
+    if capital_to_invest > total_capital:
         raise ValueError("capital_to_invest cannot exceed TOTAL_CAPITAL_INR")
 
     quantity = capital_to_invest / entry_price
     target_profit_inr = capital_to_invest * TARGET_PROFIT_PCT
     max_allowed_loss_inr = capital_to_invest * MAX_RISK_PCT
 
-    target_price = entry_price + (target_profit_inr / quantity)
-    stop_loss_price = entry_price - (max_allowed_loss_inr / quantity)
+    target_price = entry_price * (1 + TARGET_PROFIT_PCT)
+    stop_loss_price = entry_price * (1 - MAX_RISK_PCT)
     potential_reward = target_price - entry_price
     potential_risk = entry_price - stop_loss_price
     rrr = potential_reward / potential_risk if potential_risk > 0 else 0.0
