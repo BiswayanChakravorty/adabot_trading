@@ -554,7 +554,14 @@ def run_agent_cycle():
 
     crypto_df = fetch_crypto_data()
     chart_data = fetch_crypto_chart_data()
-    strategy_summary = build_strategy_summary(fetch_strategy_data())
+    strategy_input = {
+        asset: [
+            {"timestamp": point["time"], "close": point["value"]}
+            for point in points
+        ]
+        for asset, points in chart_data.items()
+    }
+    strategy_summary = build_strategy_summary(strategy_input)
     get_trade_idea._strategy_context = strategy_summary
     if ENABLE_STOCKS:
         stock_df = fetch_stock_data()
