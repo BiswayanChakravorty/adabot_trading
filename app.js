@@ -118,11 +118,24 @@ function renderAgent(best,reason){
 
 function renderLiveBoard(){
   const box=$("#agent-board-grid");if(!box)return;
-  box.innerHTML=CONFIG.order.map(name=>{const r=S.results[name];if(!r)return'<div class="agent-mini loading"><b>'+name+'</b><span>waiting for data…</span></div>';
-    const cls=r.action==="BUY"?"buy":r.action==="SELL"?"sell":"watch";
-    return'<button class="agent-mini '+cls+'" data-agent-asset="'+name+'"><div class="mini-top"><b>'+name+'</b><strong>'+r.action+'</strong></div><div class="mini-price">'+price(r.entry)+'</div><div class="mini-stats">Score '+(r.score>0?"+":"")+r.score+" • RSI "+r.rsi.toFixed(1)+" • Vol "+r.volumeRatio.toFixed(1)+"x</div><div class="mini-pattern">'+escapeHtml(r.pattern)+'</div></button>';
-  }).join("");
-  box.querySelectorAll("[data-agent-asset]").forEach(b=>b.onclick=()=>select(b.dataset.agentAsset));
+  box.innerHTML="";
+  CONFIG.order.forEach(name=>{
+    const r=S.results[name];
+    const card=document.createElement("button");
+    card.className="agent-mini "+(r?(r.action==="BUY"?"buy":r.action==="SELL"?"sell":"watch"):"loading");
+    card.dataset.agentAsset=name;
+    const top=document.createElement("div");top.className="mini-top";
+    const n=document.createElement("b");n.textContent=name;
+    const act=document.createElement("strong");act.textContent=r?r.action:"WAIT";
+    top.append(n,act);
+    const p=document.createElement("div");p.className="mini-price";p.textContent=r?price(r.entry):"—";
+    const stats=document.createElement("div");stats.className="mini-stats";
+    stats.textContent=r?"Score "+(r.score>0?"+":"")+r.score+" • RSI "+r.rsi.toFixed(1)+" • Vol "+r.volumeRatio.toFixed(1)+"x":"waiting for data…";
+    const pattern=document.createElement("div");pattern.className="mini-pattern";pattern.textContent=r?r.pattern:"";
+    card.append(top,p,stats,pattern);
+    card.onclick=()=>select(name);
+    box.appendChild(card);
+  });
 }
 
 function updatePrices(results){
