@@ -177,6 +177,8 @@ def validate_trade_idea(idea: object, market_df: pd.DataFrame) -> dict:
     """Validate and normalize an LLM trade idea before risk calculations."""
     if not isinstance(idea, dict):
         raise ValueError("AI response must be a JSON object")
+    if not isinstance(market_df, pd.DataFrame):
+        raise ValueError("market snapshot must be a pandas DataFrame")
 
     action = str(idea.get("action", "")).strip().upper()
     if action not in {"BUY", "SKIP"}:
@@ -201,17 +203,10 @@ def validate_trade_idea(idea: object, market_df: pd.DataFrame) -> dict:
     if matches.empty:
         raise ValueError(f"AI asset '{asset}' is not present in the market snapshot")
 
-    try:
-        entry_price = float(idea.get("entry_price"))
-    except (TypeError, ValueError):
-        raise ValueError("BUY signal entry_price must be numeric") from None
-
-    if not math.isfinite(entry_price) or entry_price <= 0:
-        raise ValueError("BUY signal entry_price must be positive and finite")
-
-    current_price = float(matches.iloc[0]["price"])
-    if not math.isfinite(current_price) or current_price <= 0:
-        raise ValueError(f"market price for '{asset}' is invalid")
+    entry_price = _positive_float(idea.get("entry_price"), "BUY signal entry_price")
+    current_price = _positive_float(
+        matches.iloc[0]["price"], f"market price for '{asset}'"
+    )
 
     deviation = abs(entry_price - current_price) / current_price
     if deviation > MAX_ENTRY_DEVIATION_PCT:
