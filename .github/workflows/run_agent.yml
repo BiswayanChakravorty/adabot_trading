@@ -8,18 +8,29 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: trading-agent-scan
+  cancel-in-progress: false
+
 jobs:
   scan:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+          cache: "pip"
+
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: python -m pip install --disable-pip-version-check -r requirements.txt
+
       - name: Run tests
-        run: pytest -q
+        env:
+          PYTHONPATH: .
+        run: python -m pytest -q
+
       - name: Run agent
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
@@ -27,6 +38,7 @@ jobs:
           ALERT_EMAIL_TO: ${{ secrets.ALERT_EMAIL_TO }}
           ALERT_EMAIL_PASSWORD: ${{ secrets.ALERT_EMAIL_PASSWORD }}
         run: python trading_agent.py
+
       - name: Commit updated log
         run: |
           git config user.name "trading-agent-bot"
@@ -34,7 +46,7 @@ jobs:
           if [ -f trading_agent_log.jsonl ]; then
             git add trading_agent_log.jsonl
             if ! git diff --cached --quiet; then
-              git commit -m "Log: $(date -u)"
+              git commit -m "Log: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
               git push
             fi
           fi
