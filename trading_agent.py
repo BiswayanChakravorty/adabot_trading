@@ -291,6 +291,13 @@ def calculate_risk_parameters(
     per_trade = _positive_float(
         PER_TRADE_ALLOCATION_INR, "PER_TRADE_ALLOCATION_INR"
     )
+    target_pct = _positive_float(TARGET_PROFIT_PCT, "TARGET_PROFIT_PCT")
+    max_risk_pct = _positive_float(MAX_RISK_PCT, "MAX_RISK_PCT")
+    min_rrr = _finite_float(MIN_RISK_REWARD_RATIO, "MIN_RISK_REWARD_RATIO")
+    if max_risk_pct >= 1:
+        raise ValueError("MAX_RISK_PCT must be less than 1")
+    if min_rrr < 0:
+        raise ValueError("MIN_RISK_REWARD_RATIO cannot be negative")
     if per_trade > total_capital:
         raise ValueError("PER_TRADE_ALLOCATION_INR cannot exceed TOTAL_CAPITAL_INR")
 
@@ -305,11 +312,11 @@ def calculate_risk_parameters(
         raise ValueError("capital_to_invest cannot exceed TOTAL_CAPITAL_INR")
 
     quantity = capital_to_invest / entry_price
-    target_profit_inr = capital_to_invest * TARGET_PROFIT_PCT
-    max_allowed_loss_inr = capital_to_invest * MAX_RISK_PCT
+    target_profit_inr = capital_to_invest * target_pct
+    max_allowed_loss_inr = capital_to_invest * max_risk_pct
 
-    target_price = entry_price * (1 + TARGET_PROFIT_PCT)
-    stop_loss_price = entry_price * (1 - MAX_RISK_PCT)
+    target_price = entry_price * (1 + target_pct)
+    stop_loss_price = entry_price * (1 - max_risk_pct)
     potential_reward = target_price - entry_price
     potential_risk = entry_price - stop_loss_price
     rrr = potential_reward / potential_risk if potential_risk > 0 else 0.0
@@ -322,7 +329,7 @@ def calculate_risk_parameters(
         "target_profit_inr": round(target_profit_inr, 2),
         "max_risk_inr": round(max_allowed_loss_inr, 2),
         "risk_reward_ratio": rrr,
-        "passed_risk_check": rrr >= MIN_RISK_REWARD_RATIO,
+        "passed_risk_check": rrr >= min_rrr,
     }
 
 
