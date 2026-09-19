@@ -217,6 +217,75 @@ def _rsi(closes: pd.Series, period: int = 14):
     return 100 - (100 / (1 + rs))
 
 
+
+def fetch_strategy_data() -> dict:
+    """Fetch 30-day price data for the configured crypto universe."""
+    result = {}
+    for name, coin_id in CRYPTO_WATCHLIST.items():
+        try:
+            response = requests.get(
+                f"https://api.coingecko.com/api/v3/coins/{coin_id}/market_chart",
+                params={"vs_currency": "usd", "days": "30", "interval": "daily"},
+                timeout=20,
+                headers={"User-Agent": "adabot-trading/1.0"},
+            )
+            response.raise_for_status()
+            prices = response.json().get("prices", [])
+            rows = []
+            for point in prices:
+                if not isinstance(point, list) or len(point) < 2:
+                    continue
+                try:
+                    rows.append({"timestamp": int(float(point[0]) / 1000), "close": _positive_float(point[1], f"{name} strategy price")})
+                except (TypeError, ValueError):
+                    continue
+            if rows:
+                result[name] = rows
+        except Exception as exc:
+            print(f"[warn] strategy data failed for {name}: {exc}")
+    return result
+
+
+def _strategy_indicators(closes: pd.Series) -> dict:
+    values = pd.to_numeric(closes, errors="coerce").dropna()
+    if len(values) < 20:
+        return {}
+    ema21 = values.ewm(span=21, adjust=False).mean()
+    ema50 = values.ewm(span=50, adjust=False).mean()
+    macd = values.ewm(span=12, adjust=False).mean() - values.ewm(span=26, adjust=False).mean()
+    macd_signal = macd.ewm(span=9, adjust=False).mean()
+    rsi = _rsi(values, 14)
+    recent_high = values.iloc[-21:-1].max() if len(values) >= 21 else values.max()
+    return {"price": float(values.iloc[-1]), "ema21": float(ema21.iloc[-1]), "ema50": float(ema50.iloc[-1]), "macd": float(macd.iloc[-1]), "macd_signal": float(macd_signal.iloc[-1]), "rsi": float(rsi) if rsi is not None else None, "recent_high": float(recent_high)}
+
+
+def evaluate_strategies(strategy_data: dict) -> dict:
+    output = {}
+    for asset, rows in strategy_data.items():
+        ind = _strategy_indicators(pd.Series([x["close"] for x in rows]))
+        if not ind:
+            continue
+        rsi = ind["rsi"]
+        strategies = {
+            "trend": "BUY" if ind["price"] > ind["ema21"] > ind["ema50"] else "WAIT",
+            "momentum": "BUY" if rsi is not None and 52 <= rsi <= 68 else "WAIT",
+            "macd": "BUY" if ind["macd"] > ind["macd_signal"] and ind["macd"] > 0 else "WAIT",
+            "breakout": "BUY" if ind["price"] > ind["recent_high"] else "WAIT",
+            "mean_reversion": "BUY" if rsi is not None and rsi < 35 else "WAIT",
+        }
+        votes = sum(v == "BUY" for v in strategies.values())
+        output[asset] = {"consensus": "BUY" if votes >= 3 else "WAIT", "buy_votes": votes, "total_strategies": len(strategies), "strategies": strategies, "indicators": ind}
+    return output
+
+
+def build_strategy_summary(strategy_data: dict) -> dict:
+    evaluations = evaluate_strategies(strategy_data)
+    candidates = [{"asset": a, "buy_votes": d["buy_votes"], "total_strategies": d["total_strategies"]} for a, d in evaluations.items() if d["consensus"] == "BUY"]
+    candidates.sort(key=lambda x: x["buy_votes"], reverse=True)
+    return {"strategy_count": 5, "strategy_names": ["Trend", "Momentum", "MACD", "Breakout", "Mean Reversion"], "evaluations": evaluations, "candidates": candidates}
+
+
+
 def validate_trade_idea(idea: object, market_df: pd.DataFrame) -> dict:
     """Validate and normalize an LLM trade idea before risk calculations."""
     if not isinstance(idea, dict):
@@ -276,6 +345,7 @@ def get_trade_idea(market_df: pd.DataFrame) -> dict | None:
 
     client = Groq(api_key=GROQ_API_KEY)
     market_summary = market_df.to_string(index=False)
+    strategy_context = getattr(get_trade_idea, "_strategy_context", {})
     capital_for_trade = min(PER_TRADE_ALLOCATION_INR, TOTAL_CAPITAL_INR)
     prompt = f"""You are a cautious market-scanning assistant.
 
@@ -285,7 +355,9 @@ Today's market snapshot:
 Maximum capital allocation for this check: INR {capital_for_trade}.
 
 From this list ONLY, identify at most one asset with a favorable short-term
-risk/reward setup using the supplied trend and momentum data. Do not invent
+risk/reward setup using the supplied market data.
+Strategy context:
+{strategy_context} Do not invent
 assets or prices. If none looks reasonable, choose SKIP.
 
 For BUY, entry_price must be close to the supplied current price for that asset.
@@ -373,6 +445,7 @@ def publish_dashboard_data(
     risk: dict | None = None,
     status: str = "no_trade",
     chart_data: dict | None = None,
+    strategy_summary: dict | None = None,
 ):
     """Publish sanitized, frontend-ready state. No API keys or credentials are written."""
     history = []
@@ -414,6 +487,7 @@ def publish_dashboard_data(
         },
         "market_snapshot": market_df.to_dict(orient="records"),
         "chart_history": chart_data or {},
+        "strategy_summary": strategy_summary or {},
         "latest_signal": event,
         "history": history,
         "modules": [
@@ -480,6 +554,8 @@ def run_agent_cycle():
 
     crypto_df = fetch_crypto_data()
     chart_data = fetch_crypto_chart_data()
+    strategy_summary = build_strategy_summary(fetch_strategy_data())
+    get_trade_idea._strategy_context = strategy_summary
     if ENABLE_STOCKS:
         stock_df = fetch_stock_data()
         market_df = pd.concat(
@@ -489,7 +565,7 @@ def run_agent_cycle():
         market_df = crypto_df
 
     if market_df.empty:
-        publish_dashboard_data(market_df, status="error", chart_data=chart_data)
+        publish_dashboard_data(market_df, status="error", chart_data=chart_data, strategy_summary=strategy_summary)
         log_result({"status": "error", "message": "No market data retrieved."})
         return
 
@@ -543,6 +619,7 @@ def run_agent_cycle():
         risk=risk,
         status=record["status"],
         chart_data=chart_data,
+        strategy_summary=strategy_summary,
     )
     log_result(record)
 
