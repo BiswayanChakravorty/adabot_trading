@@ -161,6 +161,38 @@ def fetch_crypto_data() -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+
+def fetch_crypto_chart_data() -> dict:
+    """Fetch public historical price series for the dashboard without exposing credentials."""
+    charts = {}
+    for name, coin_id in CRYPTO_WATCHLIST.items():
+        try:
+            response = requests.get(
+                f"https://api.coingecko.com/api/v3/coins/{coin_id}/market_chart",
+                params={"vs_currency": "usd", "days": "30"},
+                timeout=20,
+                headers={"User-Agent": "adabot-trading/1.0"},
+            )
+            response.raise_for_status()
+            payload = response.json()
+            prices = payload.get("prices", [])
+            clean = []
+            for point in prices:
+                if not isinstance(point, list) or len(point) < 2:
+                    continue
+                try:
+                    timestamp = int(float(point[0]) / 1000)
+                    price = _positive_float(point[1], f"{name} chart price")
+                except (TypeError, ValueError):
+                    continue
+                clean.append({"time": timestamp, "value": price})
+            if clean:
+                charts[name] = clean[-1000:]
+        except Exception as exc:
+            print(f"[warn] failed to fetch chart data for {name}: {exc}")
+    return charts
+
+
 def _rsi(closes: pd.Series, period: int = 14):
     if isinstance(period, bool) or not isinstance(period, int) or period <= 0:
         raise ValueError("period must be a positive integer")
@@ -340,6 +372,7 @@ def publish_dashboard_data(
     signal: dict | None = None,
     risk: dict | None = None,
     status: str = "no_trade",
+    chart_data: dict | None = None,
 ):
     """Publish sanitized, frontend-ready state. No API keys or credentials are written."""
     history = []
@@ -380,6 +413,7 @@ def publish_dashboard_data(
             "strategy": "AI short-term scanner + deterministic risk filter",
         },
         "market_snapshot": market_df.to_dict(orient="records"),
+        "chart_history": chart_data or {},
         "latest_signal": event,
         "history": history,
         "modules": [
@@ -445,6 +479,7 @@ def run_agent_cycle():
     print(f"[{_utc_now()}] Running market scan...")
 
     crypto_df = fetch_crypto_data()
+    chart_data = fetch_crypto_chart_data()
     if ENABLE_STOCKS:
         stock_df = fetch_stock_data()
         market_df = pd.concat(
@@ -454,7 +489,7 @@ def run_agent_cycle():
         market_df = crypto_df
 
     if market_df.empty:
-        publish_dashboard_data(market_df, status="error")
+        publish_dashboard_data(market_df, status="error", chart_data=chart_data)
         log_result({"status": "error", "message": "No market data retrieved."})
         return
 
@@ -465,7 +500,7 @@ def run_agent_cycle():
         or raw_idea.get("action") != "BUY"
         or raw_idea.get("entry_price") is None
     ):
-        publish_dashboard_data(market_df, signal=raw_idea, status="no_trade")
+        publish_dashboard_data(market_df, signal=raw_idea, status="no_trade", chart_data=chart_data)
         log_result({
             "status": "no_trade",
             "market_snapshot": market_df.to_dict(orient="records"),
@@ -479,7 +514,7 @@ def run_agent_cycle():
         idea = validate_trade_idea(raw_idea, market_df)
         risk = calculate_risk_parameters(idea["entry_price"])
     except (TypeError, ValueError) as exc:
-        publish_dashboard_data(market_df, signal=raw_idea, status="invalid_ai_signal")
+        publish_dashboard_data(market_df, signal=raw_idea, status="invalid_ai_signal", chart_data=chart_data)
         log_result({
             "status": "invalid_ai_signal",
             "market_snapshot": market_df.to_dict(orient="records"),
@@ -507,6 +542,7 @@ def run_agent_cycle():
         signal=idea,
         risk=risk,
         status=record["status"],
+        chart_data=chart_data,
     )
     log_result(record)
 
