@@ -143,3 +143,25 @@ def test_malformed_market_price_is_rejected():
             },
             market,
         )
+
+
+
+def test_strategy_engine_returns_consensus():
+    strategy_data = {
+        "Bitcoin": [{"close": 100 + i * 2, "timestamp": i} for i in range(30)]
+    }
+    result = trading_agent.evaluate_strategies(strategy_data)
+    assert "Bitcoin" in result
+    assert result["Bitcoin"]["total_strategies"] == 5
+    assert set(result["Bitcoin"]["strategies"]) == {
+        "trend", "momentum", "macd", "breakout", "mean_reversion"
+    }
+
+
+def test_strategy_summary_contains_expected_models():
+    data = {
+        "Bitcoin": [{"close": 100 + i, "timestamp": i} for i in range(30)]
+    }
+    summary = trading_agent.build_strategy_summary(data)
+    assert summary["strategy_count"] == 5
+    assert len(summary["strategy_names"]) == 5
