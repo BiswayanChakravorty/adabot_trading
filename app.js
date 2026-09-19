@@ -10,16 +10,25 @@ function renderWatch(rows){const box=$("#watchlist-grid");box.innerHTML="";["Bit
 function renderSignal(s){const buy=s.action==="BUY";$("#signal-title").textContent=buy?`BUY ${s.asset||""}`:"No trade";const b=$("#signal-badge");b.textContent=buy?"BUY":"SKIP";b.className="badge "+(buy?"buy":"skip");$("#signal-rationale").textContent=s.rationale||"No qualifying candidate was published in the latest scan.";$("#signal-entry").textContent=s.entry_price?money(s.entry_price,"INR"):"—";$("#signal-target").textContent=s.target_price?money(s.target_price,"INR"):"—";$("#signal-stop").textContent=s.stop_loss_price?money(s.stop_loss_price,"INR"):"—";$("#signal-rr").textContent=s.risk_reward_ratio?Number(s.risk_reward_ratio).toFixed(2):"—";$("#signal-observed").textContent=s.observed_price?money(s.observed_price,"INR"):"—";const h=S.data?.history||[];$("#history-body").innerHTML=h.slice().reverse().slice(0,24).map(x=>`<tr><td>${tm(x.timestamp)}</td><td>${x.asset||"—"}</td><td class="${x.action==="BUY"?"action-buy":"action-skip"}">${x.action||"SKIP"}</td><td>${x.entry_price?money(x.entry_price,"INR"):"—"}</td><td>${x.risk_reward_ratio?Number(x.risk_reward_ratio).toFixed(2):"—"}</td><td class="${x.status==="signal_passed"?"status-pass":""}">${String(x.status||"").replaceAll("_"," ")}</td></tr>`).join("")||'<tr><td colspan="6" class="empty">No scans published yet.</td></tr>'}
 async function chart(){
   if(!window.LightweightCharts)return;
-  $("#chart-status").textContent="Loading agent chart data…";
+  $("#chart-status").textContent="Loading chart data…";
   try{
     const all=(S.data&&S.data.chart_history&&S.data.chart_history[S.asset])||[];
     const cutoff=Date.now()/1000-S.days*86400;
-    const points=all.filter(x=>Number(x.time)>=cutoff).map(x=>({time:Number(x.time),value:Number(x.value)})).filter(x=>Number.isFinite(x.value));
+    let points=all.filter(x=>Number(x.time)>=cutoff).map(x=>({time:Number(x.time),value:Number(x.value)})).filter(x=>Number.isFinite(x.value));
+    let source="Agent-published historical data";
+    if(points.length<2){
+      const ids={Bitcoin:"bitcoin",Ethereum:"ethereum",Solana:"solana",XRP:"ripple",Dogecoin:"dogecoin"};
+      const r=await fetch(`https://api.coingecko.com/api/v3/coins/${ids[S.asset]}/market_chart?vs_currency=usd&days=${S.days}`,{cache:"no-store"});
+      if(!r.ok)throw Error("CoinGecko chart request failed");
+      const payload=await r.json();
+      points=(payload.prices||[]).map(x=>({time:Math.floor(Number(x[0])/1000),value:Number(x[1])})).filter(x=>Number.isFinite(x.time)&&Number.isFinite(x.value));
+      source="Live CoinGecko chart fallback";
+    }
     draw(points);
     const a=points.at(-1),f=points[0];
     if(a)$("#live-price").textContent=money(a.value);
     if(a&&f){const ch=(a.value-f.value)/f.value*100;$("#price-change").textContent=pct(ch);$("#price-change").className=ch>=0?"up":"down"}
-    $("#chart-status").textContent=points.length?"Agent-published historical data":"No chart history published yet";
+    $("#chart-status").textContent=points.length?source:"No chart history available";
   }catch(e){$("#chart-status").textContent="Chart data unavailable";draw([])}
 }
 function draw(p){const el=$("#chart");if(S.chart)S.chart.remove();S.chart=LightweightCharts.createChart(el,{layout:{background:{type:"solid",color:"transparent"},textColor:"#7f8b9b"},grid:{vertLines:{color:"#141b24"},horzLines:{color:"#141b24"}},rightPriceScale:{borderColor:"#202a37"},timeScale:{borderColor:"#202a37",timeVisible:true},crosshair:{mode:LightweightCharts.CrosshairMode.Normal}});const line=S.chart.addSeries(LightweightCharts.LineSeries,{color:"#20d69a",lineWidth:2});line.setData(p);S.chart.timeScale().fitContent()}
