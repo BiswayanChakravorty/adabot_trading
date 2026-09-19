@@ -292,7 +292,7 @@ def calculate_risk_parameters(
         "stop_loss_price": round(stop_loss_price, 2),
         "target_profit_inr": round(target_profit_inr, 2),
         "max_risk_inr": round(max_allowed_loss_inr, 2),
-        "risk_reward_ratio": round(rrr, 2),
+        "risk_reward_ratio": rrr,
         "passed_risk_check": rrr >= MIN_RISK_REWARD_RATIO,
     }
 
