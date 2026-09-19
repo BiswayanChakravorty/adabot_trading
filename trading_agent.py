@@ -4,15 +4,17 @@ trading_agent.py
 A free-to-run market-scanning agent that:
   1. Pulls stock/index data (yfinance) and crypto data (CoinGecko).
   2. Sends a market snapshot to Groq for a candidate trade idea.
-  3. Applies a deterministic percentage-based risk-management filter.
-  4. Logs results to JSONL and optionally emails passed candidates.
-  5. Runs locally or on GitHub Actions.
+  3. Validates the model output against the live market snapshot.
+  4. Applies a deterministic capital/risk-management filter.
+  5. Logs results to JSONL and optionally emails passed candidates.
+  6. Runs locally or on GitHub Actions.
 
 It does not place trades.
 """
 
 import datetime
 import json
+import math
 import os
 import smtplib
 from email.mime.text import MIMEText
@@ -45,6 +47,9 @@ TARGET_PROFIT_PCT = 0.10
 MAX_RISK_PCT = 0.03
 MIN_RISK_REWARD_RATIO = 2.0
 
+# Prevent the LLM from inventing an entry price far away from the observed market.
+MAX_ENTRY_DEVIATION_PCT = 0.05
+
 LOG_FILE = "trading_agent_log.jsonl"
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
@@ -54,6 +59,10 @@ ALERT_EMAIL_TO = os.getenv("ALERT_EMAIL_TO", "")
 ALERT_EMAIL_PASSWORD = os.getenv("ALERT_EMAIL_PASSWORD", "")
 
 
+def _utc_now() -> str:
+    return datetime.datetime.now(datetime.timezone.utc).isoformat()
+
+
 def fetch_stock_data() -> pd.DataFrame:
     rows = []
     for name, ticker in STOCK_WATCHLIST.items():
@@ -61,8 +70,12 @@ def fetch_stock_data() -> pd.DataFrame:
             hist = yf.Ticker(ticker).history(period="1mo", interval="1d")
             if hist.empty:
                 continue
+
             last_close = float(hist["Close"].iloc[-1])
             month_ago = float(hist["Close"].iloc[0])
+            if not math.isfinite(last_close) or not math.isfinite(month_ago) or month_ago <= 0:
+                continue
+
             change_pct = (last_close - month_ago) / month_ago * 100
             rsi = _rsi(hist["Close"])
             rows.append({
@@ -86,14 +99,34 @@ def fetch_crypto_data() -> pd.DataFrame:
     }
     rows = []
     try:
-        response = requests.get(url, params=params, timeout=15)
+        response = requests.get(
+            url,
+            params=params,
+            timeout=15,
+            headers={"User-Agent": "adabot-trading/1.0"},
+        )
         response.raise_for_status()
+        payload = response.json()
+        if not isinstance(payload, list):
+            raise ValueError("CoinGecko response was not a list")
+
         id_to_name = {value: key for key, value in CRYPTO_WATCHLIST.items()}
-        for coin in response.json():
+        for coin in payload:
+            coin_id = coin.get("id")
+            price = coin.get("current_price")
+            if not coin_id or price is None:
+                continue
+            try:
+                price = float(price)
+            except (TypeError, ValueError):
+                continue
+            if not math.isfinite(price) or price <= 0:
+                continue
+
             rows.append({
-                "asset": id_to_name.get(coin["id"], coin["id"]),
+                "asset": id_to_name.get(coin_id, coin_id),
                 "type": "crypto",
-                "price": coin.get("current_price"),
+                "price": price,
                 "24h_change_pct": round(
                     coin.get("price_change_percentage_24h") or 0, 2
                 ),
@@ -119,6 +152,63 @@ def _rsi(closes: pd.Series, period: int = 14):
     return 100 - (100 / (1 + rs))
 
 
+def validate_trade_idea(idea: object, market_df: pd.DataFrame) -> dict:
+    """Validate and normalize an LLM trade idea before risk calculations."""
+    if not isinstance(idea, dict):
+        raise ValueError("AI response must be a JSON object")
+
+    action = str(idea.get("action", "")).strip().upper()
+    if action not in {"BUY", "SKIP"}:
+        raise ValueError("action must be BUY or SKIP")
+
+    if action == "SKIP":
+        return {
+            "asset": None,
+            "action": "SKIP",
+            "entry_price": None,
+            "rationale": str(idea.get("rationale", "")).strip(),
+        }
+
+    if market_df.empty or "asset" not in market_df.columns or "price" not in market_df.columns:
+        raise ValueError("market snapshot has no usable asset/price columns")
+
+    asset = str(idea.get("asset", "")).strip()
+    if not asset:
+        raise ValueError("BUY signal must contain an asset")
+
+    matches = market_df[market_df["asset"].astype(str) == asset]
+    if matches.empty:
+        raise ValueError(f"AI asset '{asset}' is not present in the market snapshot")
+
+    try:
+        entry_price = float(idea.get("entry_price"))
+    except (TypeError, ValueError):
+        raise ValueError("BUY signal entry_price must be numeric") from None
+
+    if not math.isfinite(entry_price) or entry_price <= 0:
+        raise ValueError("BUY signal entry_price must be positive and finite")
+
+    current_price = float(matches.iloc[0]["price"])
+    if not math.isfinite(current_price) or current_price <= 0:
+        raise ValueError(f"market price for '{asset}' is invalid")
+
+    deviation = abs(entry_price - current_price) / current_price
+    if deviation > MAX_ENTRY_DEVIATION_PCT:
+        raise ValueError(
+            f"entry_price is {deviation:.2%} away from observed price; "
+            f"maximum allowed is {MAX_ENTRY_DEVIATION_PCT:.2%}"
+        )
+
+    return {
+        "asset": asset,
+        "action": "BUY",
+        "entry_price": entry_price,
+        "rationale": str(idea.get("rationale", "")).strip(),
+        "observed_price": current_price,
+        "entry_deviation_pct": round(deviation * 100, 4),
+    }
+
+
 def get_trade_idea(market_df: pd.DataFrame) -> dict | None:
     if not GROQ_API_KEY:
         print("[warn] GROQ_API_KEY not set - logging raw data only.")
@@ -126,15 +216,19 @@ def get_trade_idea(market_df: pd.DataFrame) -> dict | None:
 
     client = Groq(api_key=GROQ_API_KEY)
     market_summary = market_df.to_string(index=False)
+    capital_for_trade = min(PER_TRADE_ALLOCATION_INR, TOTAL_CAPITAL_INR)
     prompt = f"""You are a cautious market-scanning assistant.
 
 Today's market snapshot:
 {market_summary}
 
-Capital available for this check: INR {PER_TRADE_ALLOCATION_INR}.
+Maximum capital allocation for this check: INR {capital_for_trade}.
 
 From this list ONLY, identify at most one asset with a favorable short-term
-risk/reward setup using trend and momentum. If none looks reasonable, choose SKIP.
+risk/reward setup using the supplied trend and momentum data. Do not invent
+assets or prices. If none looks reasonable, choose SKIP.
+
+For BUY, entry_price must be close to the supplied current price for that asset.
 
 Respond with ONLY JSON:
 {{
@@ -151,7 +245,10 @@ Respond with ONLY JSON:
             response_format={"type": "json_object"},
         )
         content = (response.choices[0].message.content or "").strip()
-        return json.loads(content)
+        return validate_trade_idea(json.loads(content), market_df)
+    except (json.JSONDecodeError, ValueError) as exc:
+        print(f"[warn] invalid Groq trade idea: {exc}")
+        return None
     except Exception as exc:
         print(f"[warn] Groq analysis failed: {exc}")
         return None
@@ -159,12 +256,24 @@ Respond with ONLY JSON:
 
 def calculate_risk_parameters(
     entry_price: float,
-    capital_to_invest: float = PER_TRADE_ALLOCATION_INR,
+    capital_to_invest: float | None = None,
 ) -> dict:
     if entry_price <= 0:
         raise ValueError("entry_price must be positive")
+
+    if TOTAL_CAPITAL_INR <= 0:
+        raise ValueError("TOTAL_CAPITAL_INR must be positive")
+    if PER_TRADE_ALLOCATION_INR <= 0:
+        raise ValueError("PER_TRADE_ALLOCATION_INR must be positive")
+    if PER_TRADE_ALLOCATION_INR > TOTAL_CAPITAL_INR:
+        raise ValueError("PER_TRADE_ALLOCATION_INR cannot exceed TOTAL_CAPITAL_INR")
+
+    if capital_to_invest is None:
+        capital_to_invest = min(PER_TRADE_ALLOCATION_INR, TOTAL_CAPITAL_INR)
     if capital_to_invest <= 0:
         raise ValueError("capital_to_invest must be positive")
+    if capital_to_invest > TOTAL_CAPITAL_INR:
+        raise ValueError("capital_to_invest cannot exceed TOTAL_CAPITAL_INR")
 
     quantity = capital_to_invest / entry_price
     target_profit_inr = capital_to_invest * TARGET_PROFIT_PCT
@@ -177,6 +286,7 @@ def calculate_risk_parameters(
     rrr = potential_reward / potential_risk if potential_risk > 0 else 0.0
 
     return {
+        "capital_to_invest": round(capital_to_invest, 2),
         "quantity": round(quantity, 6),
         "target_price": round(target_price, 2),
         "stop_loss_price": round(stop_loss_price, 2),
@@ -189,10 +299,10 @@ def calculate_risk_parameters(
 
 def log_result(record: dict):
     record = dict(record)
-    record["timestamp"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    record["timestamp"] = _utc_now()
     with open(LOG_FILE, "a", encoding="utf-8") as handle:
-        handle.write(json.dumps(record) + "\n")
-    print(json.dumps(record, indent=2))
+        handle.write(json.dumps(record, ensure_ascii=False) + "\n")
+    print(json.dumps(record, indent=2, ensure_ascii=False))
 
 
 def send_email_alert(subject: str, body: str):
@@ -213,10 +323,7 @@ def send_email_alert(subject: str, body: str):
 
 
 def run_agent_cycle():
-    print(
-        f"[{datetime.datetime.now(datetime.timezone.utc).isoformat()}] "
-        "Running market scan..."
-    )
+    print(f"[{_utc_now()}] Running market scan...")
 
     crypto_df = fetch_crypto_data()
     if ENABLE_STOCKS:
@@ -231,24 +338,26 @@ def run_agent_cycle():
         log_result({"status": "error", "message": "No market data retrieved."})
         return
 
-    idea = get_trade_idea(market_df)
+    raw_idea = get_trade_idea(market_df)
 
-    if not idea or idea.get("action") != "BUY" or not idea.get("entry_price"):
+    if not raw_idea or raw_idea.get("action") != "BUY" or not raw_idea.get("entry_price"):
         log_result({
             "status": "no_trade",
             "market_snapshot": market_df.to_dict(orient="records"),
-            "ai_response": idea,
+            "ai_response": raw_idea,
         })
         return
 
     try:
-        entry_price = float(idea["entry_price"])
-        risk = calculate_risk_parameters(entry_price)
+        # get_trade_idea already validates, but revalidate here so this boundary
+        # remains safe if the function is changed or mocked later.
+        idea = validate_trade_idea(raw_idea, market_df)
+        risk = calculate_risk_parameters(idea["entry_price"])
     except (TypeError, ValueError) as exc:
         log_result({
             "status": "invalid_ai_signal",
             "market_snapshot": market_df.to_dict(orient="records"),
-            "ai_response": idea,
+            "ai_response": raw_idea,
             "message": str(exc),
         })
         return
@@ -259,9 +368,11 @@ def run_agent_cycle():
             if risk["passed_risk_check"]
             else "signal_rejected_by_risk_filter"
         ),
-        "asset": idea.get("asset"),
-        "action": idea.get("action"),
-        "entry_price": entry_price,
+        "asset": idea["asset"],
+        "action": idea["action"],
+        "entry_price": idea["entry_price"],
+        "observed_price": idea.get("observed_price"),
+        "entry_deviation_pct": idea.get("entry_deviation_pct"),
         "rationale": idea.get("rationale"),
         **risk,
     }
@@ -271,6 +382,7 @@ def run_agent_cycle():
         body = (
             f"Asset: {record['asset']}\n"
             f"Entry: INR {record['entry_price']}\n"
+            f"Observed: INR {record['observed_price']}\n"
             f"Target: INR {record['target_price']}\n"
             f"Stop-loss: INR {record['stop_loss_price']}\n"
             f"Risk:Reward = 1:{record['risk_reward_ratio']}\n\n"
