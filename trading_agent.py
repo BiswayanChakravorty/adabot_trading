@@ -51,6 +51,7 @@ MIN_RISK_REWARD_RATIO = 2.0
 MAX_ENTRY_DEVIATION_PCT = 0.05
 
 LOG_FILE = "trading_agent_log.jsonl"
+DASHBOARD_FILE = "dashboard_data.json"
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 GROQ_MODEL = "openai/gpt-oss-120b"
@@ -333,6 +334,88 @@ def calculate_risk_parameters(
     }
 
 
+
+def publish_dashboard_data(
+    market_df: pd.DataFrame,
+    signal: dict | None = None,
+    risk: dict | None = None,
+    status: str = "no_trade",
+):
+    """Publish sanitized, frontend-ready state. No API keys or credentials are written."""
+    history = []
+    if os.path.exists(DASHBOARD_FILE):
+        try:
+            with open(DASHBOARD_FILE, "r", encoding="utf-8") as handle:
+                previous = json.load(handle)
+            history = previous.get("history", [])
+            if not isinstance(history, list):
+                history = []
+        except (OSError, json.JSONDecodeError):
+            history = []
+
+    event = {
+        "timestamp": _utc_now(),
+        "status": status,
+        "asset": signal.get("asset") if signal else None,
+        "action": signal.get("action") if signal else "SKIP",
+        "entry_price": signal.get("entry_price") if signal else None,
+        "observed_price": signal.get("observed_price") if signal else None,
+        "target_price": risk.get("target_price") if risk else None,
+        "stop_loss_price": risk.get("stop_loss_price") if risk else None,
+        "risk_reward_ratio": risk.get("risk_reward_ratio") if risk else None,
+        "rationale": signal.get("rationale") if signal else "",
+    }
+    history.append(event)
+    history = history[-168:]
+
+    payload = {
+        "generated_at": event["timestamp"],
+        "refresh_interval_minutes": 60,
+        "default_asset": "Bitcoin",
+        "agent": {
+            "name": "AdaBot Trading Agent",
+            "mode": "crypto-only",
+            "schedule": "hourly",
+            "execution": "signal-only",
+            "strategy": "AI short-term scanner + deterministic risk filter",
+        },
+        "market_snapshot": market_df.to_dict(orient="records"),
+        "latest_signal": event,
+        "history": history,
+        "modules": [
+            {
+                "id": "ai-scanner",
+                "name": "AI Short-Term Scanner",
+                "description": "Scores the supplied crypto snapshot and proposes at most one BUY or SKIP candidate.",
+                "state": "active",
+            },
+            {
+                "id": "risk-filter",
+                "name": "Deterministic Risk Filter",
+                "description": "Calculates allocation, target, stop-loss and reward:risk independently of the model.",
+                "state": "active",
+            },
+            {
+                "id": "market-context",
+                "name": "Market Context",
+                "description": "Publishes observed crypto prices and 24h/30d movement used by the agent.",
+                "state": "active",
+            },
+        ],
+        "risk_config": {
+            "total_capital_inr": TOTAL_CAPITAL_INR,
+            "per_trade_allocation_inr": PER_TRADE_ALLOCATION_INR,
+            "target_profit_pct": TARGET_PROFIT_PCT,
+            "max_risk_pct": MAX_RISK_PCT,
+            "minimum_risk_reward_ratio": MIN_RISK_REWARD_RATIO,
+            "max_entry_deviation_pct": MAX_ENTRY_DEVIATION_PCT,
+        },
+    }
+    with open(DASHBOARD_FILE, "w", encoding="utf-8") as handle:
+        json.dump(payload, handle, ensure_ascii=False, indent=2)
+        handle.write("\\n")
+
+
 def log_result(record: dict):
     record = dict(record)
     record["timestamp"] = _utc_now()
@@ -371,6 +454,7 @@ def run_agent_cycle():
         market_df = crypto_df
 
     if market_df.empty:
+        publish_dashboard_data(market_df, status="error")
         log_result({"status": "error", "message": "No market data retrieved."})
         return
 
@@ -381,6 +465,7 @@ def run_agent_cycle():
         or raw_idea.get("action") != "BUY"
         or raw_idea.get("entry_price") is None
     ):
+        publish_dashboard_data(market_df, signal=raw_idea, status="no_trade")
         log_result({
             "status": "no_trade",
             "market_snapshot": market_df.to_dict(orient="records"),
@@ -394,6 +479,7 @@ def run_agent_cycle():
         idea = validate_trade_idea(raw_idea, market_df)
         risk = calculate_risk_parameters(idea["entry_price"])
     except (TypeError, ValueError) as exc:
+        publish_dashboard_data(market_df, signal=raw_idea, status="invalid_ai_signal")
         log_result({
             "status": "invalid_ai_signal",
             "market_snapshot": market_df.to_dict(orient="records"),
@@ -416,6 +502,12 @@ def run_agent_cycle():
         "rationale": idea.get("rationale"),
         **risk,
     }
+    publish_dashboard_data(
+        market_df,
+        signal=idea,
+        risk=risk,
+        status=record["status"],
+    )
     log_result(record)
 
     if risk["passed_risk_check"]:
