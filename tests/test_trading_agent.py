@@ -26,7 +26,7 @@ def test_risk_parameters():
     assert risk["stop_loss_price"] == pytest.approx(97.0)
     assert risk["target_profit_inr"] == pytest.approx(100.0)
     assert risk["max_risk_inr"] == pytest.approx(30.0)
-    assert risk["risk_reward_ratio"] == pytest.approx(3.33)
+    assert risk["risk_reward_ratio"] == pytest.approx(10 / 3)
     assert risk["passed_risk_check"] is True
 
 
@@ -109,3 +109,37 @@ def test_skip_signal_is_safe():
     )
     assert idea["action"] == "SKIP"
     assert idea["entry_price"] is None
+
+
+def test_rsi_flat_series_is_neutral():
+    assert _rsi(pd.Series([5.0] * 15), period=14) == pytest.approx(50.0)
+
+
+def test_risk_rejects_non_finite_entry_price():
+    with pytest.raises(ValueError, match="finite"):
+        calculate_risk_parameters(float("nan"))
+
+
+def test_risk_rejects_boolean_entry_price():
+    with pytest.raises(ValueError, match="numeric"):
+        calculate_risk_parameters(True)
+
+
+def test_risk_rejects_non_finite_capital():
+    with pytest.raises(ValueError, match="finite"):
+        calculate_risk_parameters(100.0, float("inf"))
+
+
+def test_malformed_market_price_is_rejected():
+    market = pd.DataFrame([
+        {"asset": "Bitcoin", "type": "crypto", "price": float("nan")},
+    ])
+    with pytest.raises(ValueError, match="market price"):
+        validate_trade_idea(
+            {
+                "asset": "Bitcoin",
+                "action": "BUY",
+                "entry_price": 100000,
+            },
+            market,
+        )
