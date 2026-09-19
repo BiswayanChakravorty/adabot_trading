@@ -63,6 +63,25 @@ def _utc_now() -> str:
     return datetime.datetime.now(datetime.timezone.utc).isoformat()
 
 
+def _finite_float(value: object, field_name: str) -> float:
+    if isinstance(value, bool):
+        raise ValueError(f"{field_name} must be numeric")
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        raise ValueError(f"{field_name} must be numeric") from None
+    if not math.isfinite(number):
+        raise ValueError(f"{field_name} must be finite")
+    return number
+
+
+def _positive_float(value: object, field_name: str) -> float:
+    number = _finite_float(value, field_name)
+    if number <= 0:
+        raise ValueError(f"{field_name} must be positive")
+    return number
+
+
 def fetch_stock_data() -> pd.DataFrame:
     rows = []
     for name, ticker in STOCK_WATCHLIST.items():
@@ -71,10 +90,10 @@ def fetch_stock_data() -> pd.DataFrame:
             if hist.empty:
                 continue
 
-            last_close = float(hist["Close"].iloc[-1])
-            month_ago = float(hist["Close"].iloc[0])
-            if not math.isfinite(last_close) or not math.isfinite(month_ago) or month_ago <= 0:
+            if "Close" not in hist.columns:
                 continue
+            last_close = _positive_float(hist["Close"].iloc[-1], f"{name} close")
+            month_ago = _positive_float(hist["Close"].iloc[0], f"{name} month-ago close")
 
             change_pct = (last_close - month_ago) / month_ago * 100
             rsi = _rsi(hist["Close"])
@@ -117,22 +136,24 @@ def fetch_crypto_data() -> pd.DataFrame:
             if not coin_id or price is None:
                 continue
             try:
-                price = float(price)
-            except (TypeError, ValueError):
-                continue
-            if not math.isfinite(price) or price <= 0:
+                price = _positive_float(price, f"{coin_id} current price")
+                change_24h = _finite_float(
+                    coin.get("price_change_percentage_24h") or 0,
+                    f"{coin_id} 24h change",
+                )
+                change_30d = _finite_float(
+                    coin.get("price_change_percentage_30d_in_currency") or 0,
+                    f"{coin_id} 30d change",
+                )
+            except ValueError:
                 continue
 
             rows.append({
                 "asset": id_to_name.get(coin_id, coin_id),
                 "type": "crypto",
                 "price": price,
-                "24h_change_pct": round(
-                    coin.get("price_change_percentage_24h") or 0, 2
-                ),
-                "30d_change_pct": round(
-                    coin.get("price_change_percentage_30d_in_currency") or 0, 2
-                ),
+                "24h_change_pct": round(change_24h, 2),
+                "30d_change_pct": round(change_30d, 2),
             })
     except Exception as exc:
         print(f"[warn] failed to fetch crypto data: {exc}")
