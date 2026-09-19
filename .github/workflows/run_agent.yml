@@ -8,7 +8,7 @@ on:
       - "dashboard_data.json"
       - "trading_agent_log.jsonl"
   schedule:
-    - cron: "0 * * * *"
+    - cron: "*/5 * * * *"
   workflow_dispatch:
 
 permissions:
