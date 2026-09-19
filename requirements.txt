@@ -2,3 +2,4 @@ pandas
 requests
 yfinance
 groq
+pytest
