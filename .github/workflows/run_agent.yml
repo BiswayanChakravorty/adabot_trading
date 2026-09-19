@@ -31,6 +31,11 @@ jobs:
           PYTHONPATH: .
         run: python -m pytest -q
 
+      - name: Verify required secrets
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        run: test -n "$GROQ_API_KEY"
+
       - name: Run agent
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
