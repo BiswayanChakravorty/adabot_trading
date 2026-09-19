@@ -1,0 +1,49 @@
+{
+  "generated_at": null,
+  "refresh_interval_minutes": 60,
+  "default_asset": "Bitcoin",
+  "agent": {
+    "name": "AdaBot Trading Agent",
+    "mode": "crypto-only",
+    "schedule": "hourly",
+    "execution": "signal-only",
+    "strategy": "AI short-term scanner + deterministic risk filter"
+  },
+  "market_snapshot": [],
+  "latest_signal": {
+    "status": "waiting_for_first_scan",
+    "action": "SKIP",
+    "asset": null,
+    "entry_price": null,
+    "rationale": "Waiting for the first successful hourly agent scan."
+  },
+  "history": [],
+  "modules": [
+    {
+      "id": "ai-scanner",
+      "name": "AI Short-Term Scanner",
+      "description": "Scores the supplied crypto snapshot and proposes at most one BUY or SKIP candidate.",
+      "state": "active"
+    },
+    {
+      "id": "risk-filter",
+      "name": "Deterministic Risk Filter",
+      "description": "Calculates allocation, target, stop-loss and reward:risk independently of the model.",
+      "state": "active"
+    },
+    {
+      "id": "market-context",
+      "name": "Market Context",
+      "description": "Publishes observed crypto prices and 24h/30d movement used by the agent.",
+      "state": "active"
+    }
+  ],
+  "risk_config": {
+    "total_capital_inr": 3000,
+    "per_trade_allocation_inr": 1000,
+    "target_profit_pct": 0.1,
+    "max_risk_pct": 0.03,
+    "minimum_risk_reward_ratio": 2,
+    "max_entry_deviation_pct": 0.05
+  }
+}
