@@ -37,7 +37,13 @@ jobs:
       - name: Verify required secrets
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-        run: test -n "$GROQ_API_KEY"
+        run: |
+          if [ -z "$GROQ_API_KEY" ]; then
+            echo "::error::GROQ_API_KEY is empty or unavailable to this workflow."
+            echo "Add GROQ_API_KEY under Settings -> Secrets and variables -> Actions -> Repository secrets."
+            exit 1
+          fi
+          echo "GROQ_API_KEY is available to the workflow."
 
       - name: Run agent
         env:
