@@ -59,7 +59,7 @@ function atr(candles,period=14){
 function macd(values){
   if(values.length<35)return null;
   const k12=2/13,k26=2/27,k9=2/10;let e12=values.slice(0,12).reduce((a,b)=>a+b,0)/12;let e26=values.slice(0,26).reduce((a,b)=>a+b,0)/26;const ms=[];
-  for(let i=12;i<values.length;i++)e12=values[i]*k12+e12*(1-k12);
+  for(let i=12;i<26;i++)e12=values[i]*k12+e12*(1-k12);
   for(let i=26;i<values.length;i++){e12=values[i]*k12+e12*(1-k12);e26=values[i]*k26+e26*(1-k26);ms.push(e12-e26)}
   if(ms.length<9)return null;let sig=ms.slice(0,9).reduce((a,b)=>a+b,0)/9;
   for(let i=9;i<ms.length;i++)sig=ms[i]*k9+sig*(1-k9);
