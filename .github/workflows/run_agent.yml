@@ -1,6 +1,12 @@
 name: Trading Agent Scan
 
 on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - "dashboard_data.json"
+      - "trading_agent_log.jsonl"
   schedule:
     - cron: "0 * * * *"
   workflow_dispatch:
