@@ -521,7 +521,7 @@ def publish_dashboard_data(
     }
     with open(DASHBOARD_FILE, "w", encoding="utf-8") as handle:
         json.dump(payload, handle, ensure_ascii=False, indent=2)
-        handle.write("\\n")
+        handle.write("\n")
 
 
 def log_result(record: dict):
@@ -576,7 +576,7 @@ def run_agent_cycle():
         or raw_idea.get("action") != "BUY"
         or raw_idea.get("entry_price") is None
     ):
-        publish_dashboard_data(market_df, signal=raw_idea, status="no_trade", chart_data=chart_data)
+        publish_dashboard_data(market_df, signal=raw_idea, status="no_trade", chart_data=chart_data, strategy_summary=strategy_summary)
         log_result({
             "status": "no_trade",
             "market_snapshot": market_df.to_dict(orient="records"),
@@ -590,7 +590,7 @@ def run_agent_cycle():
         idea = validate_trade_idea(raw_idea, market_df)
         risk = calculate_risk_parameters(idea["entry_price"])
     except (TypeError, ValueError) as exc:
-        publish_dashboard_data(market_df, signal=raw_idea, status="invalid_ai_signal", chart_data=chart_data)
+        publish_dashboard_data(market_df, signal=raw_idea, status="invalid_ai_signal", chart_data=chart_data, strategy_summary=strategy_summary)
         log_result({
             "status": "invalid_ai_signal",
             "market_snapshot": market_df.to_dict(orient="records"),
