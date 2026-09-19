@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-19T16:58:03.970824+00:00",
+  "generated_at": "2026-09-19T16:59:08.891543+00:00",
   "refresh_interval_minutes": 60,
   "default_asset": "Bitcoin",
   "agent": {
@@ -13,36 +13,36 @@
     {
       "asset": "Bitcoin",
       "type": "crypto",
-      "price": 7853914.0,
-      "24h_change_pct": 1.24,
+      "price": 7854966.0,
+      "24h_change_pct": 1.26,
       "30d_change_pct": 13.8
     },
     {
       "asset": "Ethereum",
       "type": "crypto",
-      "price": 254192.0,
-      "24h_change_pct": 2.01,
+      "price": 254292.0,
+      "24h_change_pct": 2.06,
       "30d_change_pct": 15.9
     },
     {
       "asset": "XRP",
       "type": "crypto",
       "price": 137.65,
-      "24h_change_pct": 3.91,
+      "24h_change_pct": 3.87,
       "30d_change_pct": 16.7
     },
     {
       "asset": "Solana",
       "type": "crypto",
-      "price": 10732.82,
-      "24h_change_pct": 0.19,
+      "price": 10740.0,
+      "24h_change_pct": 0.23,
       "30d_change_pct": 29.0
     },
     {
       "asset": "Dogecoin",
       "type": "crypto",
       "price": 8.6,
-      "24h_change_pct": 2.14,
+      "24h_change_pct": 2.04,
       "30d_change_pct": 13.4
     }
   ],
@@ -2929,8 +2929,8 @@
         "value": 81616.22715399746
       },
       {
-        "time": 1789836950,
-        "value": 81818.71854326456
+        "time": 1789837020,
+        "value": 81830.20691261129
       }
     ],
     "Ethereum": [
@@ -5815,8 +5815,8 @@
         "value": 2640.9331816229455
       },
       {
-        "time": 1789836970,
-        "value": 2648.5201778905266
+        "time": 1789837030,
+        "value": 2649.0607428621997
       }
     ],
     "Solana": [
@@ -8701,8 +8701,8 @@
         "value": 111.61873108650482
       },
       {
-        "time": 1789836970,
-        "value": 111.82870320845694
+        "time": 1789837000,
+        "value": 111.84701470492276
       }
     ],
     "XRP": [
@@ -11587,14 +11587,25 @@
         "value": 1.430475397409966
       },
       {
-        "time": 1789836960,
-        "value": 1.433939426504838
+        "time": 1789837020,
+        "value": 1.4339154176706426
       }
     ]
   },
-  "strategy_summary": {},
+  "strategy_summary": {
+    "strategy_count": 5,
+    "strategy_names": [
+      "Trend",
+      "Momentum",
+      "MACD",
+      "Breakout",
+      "Mean Reversion"
+    ],
+    "evaluations": {},
+    "candidates": []
+  },
   "latest_signal": {
-    "timestamp": "2026-09-19T16:58:03.970824+00:00",
+    "timestamp": "2026-09-19T16:59:08.891543+00:00",
     "status": "no_trade",
     "asset": null,
     "action": "SKIP",
@@ -11607,7 +11618,7 @@
   },
   "history": [
     {
-      "timestamp": "2026-09-19T16:58:03.970824+00:00",
+      "timestamp": "2026-09-19T16:59:08.891543+00:00",
       "status": "no_trade",
       "asset": null,
       "action": "SKIP",
@@ -11647,4 +11658,4 @@
     "minimum_risk_reward_ratio": 2.0,
     "max_entry_deviation_pct": 0.05
   }
-}\n
+}
