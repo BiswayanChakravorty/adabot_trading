@@ -1,5 +1,6 @@
 import pandas as pd
 import pytest
+import trading_agent
 
 from trading_agent import (
     MAX_ENTRY_DEVIATION_PCT,
