@@ -80,3 +80,21 @@ Those should be added only after the signal-generation logic and data quality ar
 ## Expectations
 
 Logged signals are candidates for your own review, not instructions to trade. No profitability or execution guarantee is made. The agent does not place trades.
+
+
+## GitHub Pages crypto dashboard
+
+The repository now includes a static crypto dashboard at index.html. It is designed for GitHub Pages and defaults to Bitcoin.
+
+The dashboard:
+- is crypto-only;
+- shows the five configured crypto assets;
+- displays the latest hourly agent signal, entry/target/stop levels, rationale and risk/reward;
+- keeps up to 168 hourly signal events;
+- renders agent-published historical crypto price data with TradingView Lightweight Charts;
+- never receives the Groq API key in the browser.
+
+GitHub Pages is deployed by .github/workflows/deploy-pages.yml. In Settings → Pages, select GitHub Actions as the publishing source.
+
+The current agent is still a single-candidate hourly scanner, not a multi-strategy trading engine. The UI exposes the actual modules currently implemented rather than inventing additional strategies.
+
