@@ -161,14 +161,25 @@ def fetch_crypto_data() -> pd.DataFrame:
 
 
 def _rsi(closes: pd.Series, period: int = 14):
+    if isinstance(period, bool) or not isinstance(period, int) or period <= 0:
+        raise ValueError("period must be a positive integer")
+    if not isinstance(closes, pd.Series):
+        closes = pd.Series(closes)
     if len(closes) < period + 1:
         return None
-    delta = closes.diff()
+
+    numeric_closes = pd.to_numeric(closes, errors="coerce")
+    if numeric_closes.isna().any():
+        return None
+
+    delta = numeric_closes.diff()
     gain = delta.clip(lower=0).rolling(period).mean()
     loss = (-delta.clip(upper=0)).rolling(period).mean()
     last_gain, last_loss = gain.iloc[-1], loss.iloc[-1]
     if last_loss == 0:
-        return 100.0
+        return 50.0 if last_gain == 0 else 100.0
+    if last_gain == 0:
+        return 0.0
     rs = last_gain / last_loss
     return 100 - (100 / (1 + rs))
 
@@ -258,7 +269,7 @@ Respond with ONLY JSON:
         response = client.chat.completions.create(
             model=GROQ_MODEL,
             messages=[{"role": "user", "content": prompt}],
-            response_format={"type": "json_schema", "json_schema": {"name": "trade_idea", "strict": true, "schema": {"type": "object", "properties": {"asset": {"type": ["string", "null"]}, "action": {"type": "string", "enum": ["BUY", "SKIP"]}, "entry_price": {"type": ["number", "null"]}, "rationale": {"type": "string"}}, "required": ["asset", "action", "entry_price", "rationale"], "additionalProperties": false}}},
+            response_format={"type": "json_schema", "json_schema": {"name": "trade_idea", "strict": True, "schema": {"type": "object", "properties": {"asset": {"type": ["string", "null"]}, "action": {"type": "string", "enum": ["BUY", "SKIP"]}, "entry_price": {"type": ["number", "null"]}, "rationale": {"type": "string"}}, "required": ["asset", "action", "entry_price", "rationale"], "additionalProperties": false}}},
         )
         content = (response.choices[0].message.content or "").strip()
         return validate_trade_idea(json.loads(content), market_df)
@@ -358,7 +369,11 @@ def run_agent_cycle():
 
     raw_idea = get_trade_idea(market_df)
 
-    if not raw_idea or raw_idea.get("action") != "BUY" or not raw_idea.get("entry_price"):
+    if (
+        not raw_idea
+        or raw_idea.get("action") != "BUY"
+        or raw_idea.get("entry_price") is None
+    ):
         log_result({
             "status": "no_trade",
             "market_snapshot": market_df.to_dict(orient="records"),
