@@ -1,0 +1,40 @@
+name: Trading Agent Scan
+
+on:
+  schedule:
+    - cron: "0 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Run agent
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          ALERT_EMAIL_FROM: ${{ secrets.ALERT_EMAIL_FROM }}
+          ALERT_EMAIL_TO: ${{ secrets.ALERT_EMAIL_TO }}
+          ALERT_EMAIL_PASSWORD: ${{ secrets.ALERT_EMAIL_PASSWORD }}
+        run: python trading_agent.py
+      - name: Commit updated log
+        run: |
+          git config user.name "trading-agent-bot"
+          git config user.email "actions@github.com"
+          if [ -f trading_agent_log.jsonl ]; then
+            git add trading_agent_log.jsonl
+            if ! git diff --cached --quiet; then
+              git commit -m "Log: $(date -u)"
+              git push
+            fi
+          fi
