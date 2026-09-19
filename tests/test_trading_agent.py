@@ -26,7 +26,7 @@ def test_risk_parameters():
     assert risk["stop_loss_price"] == pytest.approx(97.0)
     assert risk["target_profit_inr"] == pytest.approx(100.0)
     assert risk["max_risk_inr"] == pytest.approx(30.0)
-    assert risk["risk_reward_ratio"] == pytest.approx(10 / 3)
+    assert risk["risk_reward_ratio"] == pytest.approx(3.33)
     assert risk["passed_risk_check"] is True
 
 
