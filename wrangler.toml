@@ -1,0 +1,10 @@
+name = "adabot-trading-agent"
+main = "worker/index.js"
+compatibility_date = "2026-09-26"
+
+[triggers]
+crons = ["* * * * *"]
+
+[[kv_namespaces]]
+binding = "SIGNAL_STATE"
+id = "REPLACE_WITH_CLOUDFLARE_KV_NAMESPACE_ID"
