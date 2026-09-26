@@ -1,6 +1,6 @@
-# AdaBot Crypto — Crypto-Only Market Scanner
+# AdaBot — Crypto + Indian Index Market Scanner
 
-AdaBot Crypto is dedicated to digital-asset markets. Its supported universe is Bitcoin (BTC), Ethereum (ETH), Solana (SOL), XRP, and Dogecoin (DOGE), primarily quoted against USDT for the one-minute scanner. It generates research signals and applies deterministic risk checks; it does not place trades.
+AdaBot covers crypto markets (BTC, ETH, SOL, XRP, DOGE) and Indian equity indices: Nifty 50, Nifty 500, Sensex, and Bank Nifty. Crypto uses the one-minute Binance scanner; Indian indices are available as TradingView charts and in the Python market snapshot. It generates research signals and applies deterministic risk checks; it does not place trades.
 
 ## Setup
 
@@ -34,9 +34,11 @@ The workflow:
 3. Runs one market-scan cycle.
 4. Commits a changed `trading_agent_log.jsonl` back to the repository.
 
-## Crypto universe
+## Market universe
 
-The product scope is crypto-only: BTC, ETH, SOL, XRP, and DOGE. The legacy stock/index helper is not part of the product workflow. The Python snapshot and dashboard are intended to use the configured crypto universe only.
+**Crypto:** BTC, ETH, SOL, XRP, DOGE.
+
+**Indian indices:** Nifty 50 (^NSEI), Nifty 500 (^CRSLDX), Sensex (^BSESN), and Bank Nifty (^NSEBANK). Crypto has a one-minute Binance signal scanner. Indian index charts are linked through TradingView; the Cloudflare one-minute signal worker does not currently scan Indian indices.
 
 ## Signal validation
 
@@ -63,7 +65,7 @@ The LLM proposes a candidate, while the Python risk layer independently calculat
 
 The total-capital limit is enforced: a requested allocation cannot exceed `TOTAL_CAPITAL_INR`, and the default allocation is capped at total capital.
 
-## Crypto-only scope and limitations
+## Scope and limitations
 
 This project is a **market scanner and signal journal**, not a proven trading strategy or execution system.
 
@@ -87,7 +89,7 @@ Logged signals are candidates for your own review, not instructions to trade. No
 The repository includes a crypto terminal at index.html, designed for GitHub Pages and defaulting to Bitcoin.
 
 The dashboard:
-- is crypto-only;
+- includes crypto and Indian index chart selections;
 - shows the five configured crypto assets;
 - displays the latest hourly agent signal, entry/target/stop levels, rationale and risk/reward;
 - keeps up to 168 hourly signal events;
