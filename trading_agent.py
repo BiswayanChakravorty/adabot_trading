@@ -19,11 +19,13 @@ import requests
 import yfinance as yf
 from groq import Groq
 
-ENABLE_STOCKS = False
+ENABLE_STOCKS = True
 
 STOCK_WATCHLIST = {
     "Sensex": "^BSESN",
     "Nifty 50": "^NSEI",
+    "Nifty 500": "^CRSLDX",
+    "Sensex": "^BSESN",
     "Bank Nifty": "^NSEBANK",
     "Nifty IT": "^CNXIT",
 }
