@@ -4,9 +4,14 @@ const CONFIG={
     Ethereum:{symbol:"ETHUSDT",tv:"BINANCE:ETHUSDT"},
     Solana:{symbol:"SOLUSDT",tv:"BINANCE:SOLUSDT"},
     XRP:{symbol:"XRPUSDT",tv:"BINANCE:XRPUSDT"},
-    Dogecoin:{symbol:"DOGEUSDT",tv:"BINANCE:DOGEUSDT"}
+    Dogecoin:{symbol:"DOGEUSDT",tv:"BINANCE:DOGEUSDT"},
+    "Nifty 50":{symbol:null,tv:"NSE:NIFTY",market:"india"},
+    "Nifty 500":{symbol:null,tv:"NSE:NIFTY500",market:"india"},
+    Sensex:{symbol:null,tv:"BSE:SENSEX",market:"india"},
+    "Bank Nifty":{symbol:null,tv:"NSE:BANKNIFTY",market:"india"}
   },
   order:["Bitcoin","Ethereum","Solana","XRP","Dogecoin"],
+  indiaOrder:["Nifty 50","Nifty 500","Sensex","Bank Nifty"],
   api:"https://data-api.binance.vision/api/v3",
   stream:"wss://data-stream.binance.vision:443/stream"
 };
@@ -24,7 +29,7 @@ function tvConfig(symbol){return{
   allow_symbol_change:true,hide_side_toolbar:false,hide_top_toolbar:false,hide_legend:false,hide_volume:false,
   withdateranges:true,save_image:true,details:true,hotlist:false,calendar:false,
   studies:["Volume@tv-basicstudies","MASimple@tv-basicstudies","RSI@tv-basicstudies","MACD@tv-basicstudies","BB@tv-basicstudies"],
-  watchlist:["BINANCE:BTCUSDT","BINANCE:ETHUSDT","BINANCE:SOLUSDT","BINANCE:XRPUSDT","BINANCE:DOGEUSDT"],
+  watchlist:["BINANCE:BTCUSDT","BINANCE:ETHUSDT","BINANCE:SOLUSDT","BINANCE:XRPUSDT","BINANCE:DOGEUSDT","NSE:NIFTY","NSE:NIFTY500","BSE:SENSEX","NSE:BANKNIFTY"],
   support_host:"https://www.tradingview.com"
 }}
 
@@ -154,7 +159,7 @@ async function enableNotifications(){
 }
 function showToast(title,body){const t=$("#toast");t.innerHTML="<b>"+escapeHtml(title)+"</b><span>"+escapeHtml(body)+"</span>";t.classList.add("show");clearTimeout(showToast.timer);showToast.timer=setTimeout(()=>t.classList.remove("show"),7000)}
 function setAgentState(v){setText("agent-state",v);setText("agent-top-label",v);setText("agent-top-time",new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}))}
-function select(asset){if(!CONFIG.assets[asset])return;S.asset=asset;document.querySelectorAll(".asset-chip").forEach(b=>b.classList.toggle("active",b.dataset.asset===asset));setText("asset-name",asset);loadTradingView();renderWatch();updatePrices(S.results)}
+function select(asset){if(!CONFIG.assets[asset])return;S.asset=asset;document.querySelectorAll(".asset-chip,.index-chip").forEach(b=>b.classList.toggle("active",b.dataset.asset===asset));setText("asset-name",asset);const isIndia=CONFIG.assets[asset].market==="india";setText("asset-quote",isIndia?"INDEX":"/ USDT");setText("live-price",isIndia?"Index quote shown in chart":"—");setText("price-change",isIndia?"NSE/BSE index":"—");$("#price-change").className="";loadTradingView();renderWatch();updatePrices(S.results)}
 
 function renderWatch(){
   const box=$("#watchlist-grid");if(!box)return;
@@ -197,7 +202,7 @@ function connectStream(){
 function scheduleReconnect(){clearTimeout(S.reconnectTimer);S.reconnectTimer=setTimeout(()=>connectStream(),5000)}
 async function loadServer(){try{const r=await fetch("./dashboard_data.json?t="+Date.now(),{cache:"no-store"});if(!r.ok)throw Error("server snapshot unavailable");S.data=await r.json();renderServerData()}catch(e){console.warn(e);setText("last-updated","Live browser agent active")}}
 
-document.querySelectorAll(".asset-chip").forEach(b=>b.onclick=()=>select(b.dataset.asset));
+document.querySelectorAll(".asset-chip,.index-chip").forEach(b=>b.onclick=()=>select(b.dataset.asset));
 $("#refresh-btn").onclick=()=>scanAll("manual");
 $("#notify-btn").onclick=enableNotifications;
 loadTradingView();loadServer();scanAll("startup");connectStream();
