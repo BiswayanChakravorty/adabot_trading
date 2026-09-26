@@ -1,6 +1,6 @@
-# Trading Agent (free, no Telegram)
+# AdaBot Crypto — Crypto-Only Market Scanner
 
-A market-scanning agent for Indian indices + major crypto using free data sources and free hosting. It logs candidate trade ideas that pass a deterministic risk filter; it does not place trades.
+AdaBot Crypto is dedicated to digital-asset markets. Its supported universe is Bitcoin (BTC), Ethereum (ETH), Solana (SOL), XRP, and Dogecoin (DOGE), primarily quoted against USDT for the one-minute scanner. It generates research signals and applies deterministic risk checks; it does not place trades.
 
 ## Setup
 
@@ -34,9 +34,9 @@ The workflow:
 3. Runs one market-scan cycle.
 4. Commits a changed `trading_agent_log.jsonl` back to the repository.
 
-## Watchlists
+## Crypto universe
 
-Edit `STOCK_WATCHLIST` and `CRYPTO_WATCHLIST` in `trading_agent.py`. `ENABLE_STOCKS = False` keeps the current Phase 1 scope to crypto; set it to `True` to include the configured Indian indices.
+The product scope is crypto-only: BTC, ETH, SOL, XRP, and DOGE. The legacy stock/index helper is not part of the product workflow. The Python snapshot and dashboard are intended to use the configured crypto universe only.
 
 ## Signal validation
 
@@ -63,7 +63,7 @@ The LLM proposes a candidate, while the Python risk layer independently calculat
 
 The total-capital limit is enforced: a requested allocation cannot exceed `TOTAL_CAPITAL_INR`, and the default allocation is capped at total capital.
 
-## Current scope and limitations
+## Crypto-only scope and limitations
 
 This project is a **market scanner and signal journal**, not a proven trading strategy or execution system.
 
@@ -84,7 +84,7 @@ Logged signals are candidates for your own review, not instructions to trade. No
 
 ## GitHub Pages crypto dashboard
 
-The repository now includes a static crypto dashboard at index.html. It is designed for GitHub Pages and defaults to Bitcoin.
+The repository includes a crypto terminal at index.html, designed for GitHub Pages and defaulting to Bitcoin.
 
 The dashboard:
 - is crypto-only;
