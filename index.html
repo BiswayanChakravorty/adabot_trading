@@ -14,7 +14,7 @@
         <div class="brand-mark">A</div>
         <div><strong>AdaBot</strong><span>TRADING TERMINAL</span></div>
       </div>
-      <div class="market-mode"><i></i> CRYPTO ONLY</div>
+      <div class="market-mode"><i></i> CRYPTO + INDIA INDICES</div>
       <div class="agent-top-status"><span id="agent-dot"></span><b id="agent-top-label">AGENT STARTING</b><small id="agent-top-time">—</small></div>
       <div class="top-actions"><span id="last-updated">Loading…</span><button id="refresh-btn" title="Refresh market data">↻</button></div>
     </header>
@@ -26,13 +26,20 @@
       <button class="asset-chip" data-asset="XRP">XRP <span id="ticker-XRP">—</span></button>
       <button class="asset-chip" data-asset="Dogecoin">DOGE <span id="ticker-Dogecoin">—</span></button>
     </nav>
+    <nav class="tickerbar india-tickerbar" aria-label="Indian market indices">
+      <span class="market-section-label">INDIA</span>
+      <button class="index-chip" data-asset="Nifty 50">NIFTY 50</button>
+      <button class="index-chip" data-asset="Nifty 500">NIFTY 500</button>
+      <button class="index-chip" data-asset="Sensex">SENSEX</button>
+      <button class="index-chip" data-asset="Bank Nifty">BANK NIFTY</button>
+    </nav>
 
     <main class="dashboard">
       <section class="chart-panel panel">
         <div class="panel-head chart-head">
           <div>
             <div class="eyebrow">TRADINGVIEW ADVANCED CHART</div>
-            <h1><span id="asset-name">Bitcoin</span> <small>/ USDT</small></h1>
+            <h1><span id="asset-name">Bitcoin</span> <small id="asset-quote">/ USDT</small></h1>
             <div class="price-line"><span id="live-price">—</span><span id="price-change">—</span></div>
           </div>
           <div class="chart-live"><span></span> LIVE MARKET</div>
