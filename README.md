@@ -98,3 +98,10 @@ GitHub Pages is deployed by .github/workflows/deploy-pages.yml. In Settings → 
 
 The current agent is still a single-candidate hourly scanner, not a multi-strategy trading engine. The UI exposes the actual modules currently implemented rather than inventing additional strategies.
 
+
+
+## Phase 2 — Unattended one-minute scanner
+
+The Phase 2 Cloudflare Worker is in `worker/index.js`, configured by `wrangler.toml`. It scans BTC, ETH, SOL, XRP, and DOGE every minute and can send Telegram alerts on new BUY/SELL signal transitions. It does not execute trades.
+
+Deployment instructions, required Cloudflare KV setup, and Telegram secret configuration are in [docs/phase2-deployment.md](docs/phase2-deployment.md). The Worker must be deployed to your Cloudflare account and configured with your own KV namespace and Telegram bot/chat secrets; it is not active until that setup is completed.
