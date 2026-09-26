@@ -1,10 +1,10 @@
 """
 trading_agent.py
 
-Crypto-only market-scanning agent for BTC, ETH, SOL, XRP, and DOGE.
-It retrieves crypto market data, optionally asks Groq for a candidate idea,
-validates that idea against observed crypto prices, applies deterministic
-risk controls, and records research signals. It does not execute trades.
+Market-scanning agent for crypto assets and selected Indian equity indices.
+It retrieves market data, optionally asks Groq for a candidate idea, validates
+that idea against observed prices, applies deterministic risk controls, and
+records research signals. It does not execute trades.
 """
 
 import datetime
@@ -22,12 +22,10 @@ from groq import Groq
 ENABLE_STOCKS = True
 
 STOCK_WATCHLIST = {
-    "Sensex": "^BSESN",
     "Nifty 50": "^NSEI",
     "Nifty 500": "^CRSLDX",
     "Sensex": "^BSESN",
     "Bank Nifty": "^NSEBANK",
-    "Nifty IT": "^CNXIT",
 }
 
 CRYPTO_WATCHLIST = {
