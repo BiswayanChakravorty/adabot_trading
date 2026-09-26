@@ -1,15 +1,10 @@
 """
 trading_agent.py
 
-A free-to-run market-scanning agent that:
-  1. Pulls stock/index data (yfinance) and crypto data (CoinGecko).
-  2. Sends a market snapshot to Groq for a candidate trade idea.
-  3. Validates the model output against the live market snapshot.
-  4. Applies a deterministic capital/risk-management filter.
-  5. Logs results to JSONL and optionally emails passed candidates.
-  6. Runs locally or on GitHub Actions.
-
-It does not place trades.
+Crypto-only market-scanning agent for BTC, ETH, SOL, XRP, and DOGE.
+It retrieves crypto market data, optionally asks Groq for a candidate idea,
+validates that idea against observed crypto prices, applies deterministic
+risk controls, and records research signals. It does not execute trades.
 """
 
 import datetime
@@ -563,13 +558,8 @@ def run_agent_cycle():
     }
     strategy_summary = build_strategy_summary(strategy_input)
     get_trade_idea._strategy_context = strategy_summary
-    if ENABLE_STOCKS:
-        stock_df = fetch_stock_data()
-        market_df = pd.concat(
-            [stock_df, crypto_df], ignore_index=True, sort=False
-        )
-    else:
-        market_df = crypto_df
+    # Product scope is crypto-only; stock/index data is never included.
+    market_df = crypto_df
 
     if market_df.empty:
         publish_dashboard_data(market_df, status="error", chart_data=chart_data, strategy_summary=strategy_summary)
