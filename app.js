@@ -202,7 +202,7 @@ function connectStream(){
 function scheduleReconnect(){clearTimeout(S.reconnectTimer);S.reconnectTimer=setTimeout(()=>connectStream(),5000)}
 async function loadServer(){try{const r=await fetch("./dashboard_data.json?t="+Date.now(),{cache:"no-store"});if(!r.ok)throw Error("server snapshot unavailable");S.data=await r.json();renderServerData()}catch(e){console.warn(e);setText("last-updated","Live browser agent active")}}
 
-function setMarket(market){S.market=market;document.querySelectorAll(".market-tab").forEach(b=>b.classList.toggle("active",b.dataset.market===market));document.querySelectorAll("[data-market-panel]").forEach(el=>{el.hidden=el.dataset.marketPanel!==market});document.querySelectorAll("[data-agent-card]").forEach(el=>el.classList.toggle("active",el.dataset.agentCard===market));}
+function setMarket(market){S.market=market;document.querySelector(".dashboard")?.classList.toggle("market-penny",market==="penny");document.querySelector(".dashboard")?.classList.toggle("market-indices",market==="indices");document.querySelectorAll(".market-tab").forEach(b=>b.classList.toggle("active",b.dataset.market===market));document.querySelectorAll("[data-market-panel]").forEach(el=>{el.hidden=el.dataset.marketPanel!==market});document.querySelectorAll("[data-agent-card]").forEach(el=>el.classList.toggle("active",el.dataset.agentCard===market));}
 document.querySelectorAll(".market-tab").forEach(b=>b.addEventListener("click",()=>setMarket(b.dataset.market)));
 document.querySelectorAll(".asset-chip,.index-chip").forEach(b=>b.onclick=()=>select(b.dataset.asset));
 setMarket("crypto");
