@@ -55,3 +55,7 @@
 @media(max-width:1200px){.agent-board-grid{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:1050px){.chart-panel{min-height:700px}.tv-shell{height:590px}.agent-board-grid{grid-template-columns:repeat(2,1fr)}.agent-top-status{display:none}}
 @media(max-width:650px){.chart-panel{min-height:520px}.tv-shell{height:430px}.chart-note{display:block;line-height:1.5}.agent-board-grid{grid-template-columns:1fr}.trade-levels{grid-template-columns:1fr}.trade-levels div{border-right:0;border-bottom:1px solid var(--border)}.trade-levels div:last-child{border-bottom:0}.agent-meta{gap:8px;flex-wrap:wrap}.agent-top-status{display:none}}
+
+
+/* Indian index selector */
+.india-tickerbar{border-top:1px solid var(--line,#263043);padding-top:10px;padding-bottom:10px;flex-wrap:wrap}.market-section-label{font-size:10px;font-weight:800;letter-spacing:.14em;color:var(--muted,#8993a5);padding:0 8px}.index-chip{border:1px solid var(--line,#263043);background:var(--panel,#111722);color:var(--text,#e7edf7);border-radius:7px;padding:9px 13px;font:inherit;font-size:12px;font-weight:700;cursor:pointer;transition:border-color .15s,background .15s}.index-chip:hover,.index-chip.active{border-color:#5b9cff;background:rgba(70,130,220,.16);color:#9dc6ff}
