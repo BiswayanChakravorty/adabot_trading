@@ -71,3 +71,5 @@
 .agent-status-pill{font-size:8px;font-weight:850;letter-spacing:1px}.agent-status-pill.live{color:var(--green)}.agent-status-pill.pending{color:#e9b65c}
 .market-table-panel{grid-column:1/-1;padding:17px;min-width:0}.market-table-panel table{min-width:1250px}[hidden]{display:none!important}
 @media(max-width:700px){.market-agent-strip{grid-template-columns:1fr;padding:0 9px}.market-tabs{padding:10px;gap:5px}.market-tab{padding:9px 10px;flex:1}.market-agent-card{padding:11px}}
+
+.dashboard.market-penny .chart-panel,.dashboard.market-penny .signal-column{display:none}.dashboard.market-indices .signal-column{display:none}.dashboard.market-indices .chart-panel{grid-column:1/-1}
