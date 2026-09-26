@@ -16,7 +16,7 @@ const CONFIG={
   stream:"wss://data-stream.binance.vision:443/stream"
 };
 
-const S={data:null,asset:"Bitcoin",candles:{},results:{},socket:null,reconnectTimer:null,scanRunning:false,lastScanAt:null,lastNotificationKey:localStorage.getItem("adabot-last-notification")||""};
+const S={data:null,asset:"Bitcoin",market:"crypto",candles:{},results:{},socket:null,reconnectTimer:null,scanRunning:false,lastScanAt:null,lastNotificationKey:localStorage.getItem("adabot-last-notification")||""};
 const $=s=>document.querySelector(s);
 const money=(v,c="USD")=>v==null||!Number.isFinite(Number(v))?"—":new Intl.NumberFormat("en-US",{style:"currency",currency:c,maximumFractionDigits:Number(v)>=1000?0:4}).format(Number(v));
 const price=v=>v==null||!Number.isFinite(Number(v))?"—":Number(v)>=1000?Number(v).toLocaleString("en-US",{maximumFractionDigits:2}):Number(v)>=1?Number(v).toLocaleString("en-US",{maximumFractionDigits:4}):Number(v).toLocaleString("en-US",{maximumFractionDigits:6});
@@ -159,7 +159,7 @@ async function enableNotifications(){
 }
 function showToast(title,body){const t=$("#toast");t.innerHTML="<b>"+escapeHtml(title)+"</b><span>"+escapeHtml(body)+"</span>";t.classList.add("show");clearTimeout(showToast.timer);showToast.timer=setTimeout(()=>t.classList.remove("show"),7000)}
 function setAgentState(v){setText("agent-state",v);setText("agent-top-label",v);setText("agent-top-time",new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}))}
-function select(asset){if(!CONFIG.assets[asset])return;S.asset=asset;document.querySelectorAll(".asset-chip,.index-chip").forEach(b=>b.classList.toggle("active",b.dataset.asset===asset));setText("asset-name",asset);const isIndia=CONFIG.assets[asset].market==="india";setText("asset-quote",isIndia?"INDEX":"/ USDT");setText("live-price",isIndia?"Index quote shown in chart":"—");setText("price-change",isIndia?"NSE/BSE index":"—");$("#price-change").className="";loadTradingView();renderWatch();updatePrices(S.results)}
+function select(asset){if(!CONFIG.assets[asset])return;S.asset=asset;setMarket(CONFIG.assets[asset].market==="india"?"indices":"crypto");document.querySelectorAll(".asset-chip,.index-chip").forEach(b=>b.classList.toggle("active",b.dataset.asset===asset));setText("asset-name",asset);const isIndia=CONFIG.assets[asset].market==="india";setText("asset-quote",isIndia?"INDEX":"/ USDT");setText("live-price",isIndia?"Index quote shown in chart":"—");setText("price-change",isIndia?"NSE/BSE index":"—");$("#price-change").className="";loadTradingView();renderWatch();updatePrices(S.results)}
 
 function renderWatch(){
   const box=$("#watchlist-grid");if(!box)return;
@@ -202,7 +202,10 @@ function connectStream(){
 function scheduleReconnect(){clearTimeout(S.reconnectTimer);S.reconnectTimer=setTimeout(()=>connectStream(),5000)}
 async function loadServer(){try{const r=await fetch("./dashboard_data.json?t="+Date.now(),{cache:"no-store"});if(!r.ok)throw Error("server snapshot unavailable");S.data=await r.json();renderServerData()}catch(e){console.warn(e);setText("last-updated","Live browser agent active")}}
 
+function setMarket(market){S.market=market;document.querySelectorAll(".market-tab").forEach(b=>b.classList.toggle("active",b.dataset.market===market));document.querySelectorAll("[data-market-panel]").forEach(el=>{el.hidden=el.dataset.marketPanel!==market});document.querySelectorAll("[data-agent-card]").forEach(el=>el.classList.toggle("active",el.dataset.agentCard===market));}
+document.querySelectorAll(".market-tab").forEach(b=>b.addEventListener("click",()=>setMarket(b.dataset.market)));
 document.querySelectorAll(".asset-chip,.index-chip").forEach(b=>b.onclick=()=>select(b.dataset.asset));
+setMarket("crypto");
 $("#refresh-btn").onclick=()=>scanAll("manual");
 $("#notify-btn").onclick=enableNotifications;
 loadTradingView();loadServer();scanAll("startup");connectStream();
