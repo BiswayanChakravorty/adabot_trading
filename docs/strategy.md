@@ -1,15 +1,18 @@
-# AdaBot Crypto Strategy
+# AdaBot Market Strategy
 
-## Product scope
+## Supported markets
 
-AdaBot is a **crypto-only** market scanner. The configured universe is Bitcoin (BTC), Ethereum (ETH), Solana (SOL), XRP, and Dogecoin (DOGE). The one-minute Worker uses Binance public spot-market candles for the USDT pairs. No stocks, indices, forex, or traditional-asset markets are part of the product scope.
+- **Crypto:** Bitcoin, Ethereum, Solana, XRP, and Dogecoin. One-minute signals use Binance USDT spot pairs.
+- **Indian indices:** Nifty 50, Nifty 500, Sensex, and Bank Nifty. Python market snapshots use Yahoo Finance symbols ^NSEI, ^CRSLDX, ^BSESN, and ^NSEBANK. Dashboard index charts use TradingView symbols.
 
-## Signal generation
+## Crypto signal engine
 
-The Cloudflare Worker calculates deterministic indicators from one-minute candles: EMA 9/21/50, RSI(14), MACD histogram, ATR, relative volume, 20-candle breakout/breakdown, and selected candle patterns. The score maps to BUY (>=4), SELL (<=-4), or WATCH. BUY/SELL are analytical signals, not orders; SELL does not mean a short position is opened.
+The Cloudflare Worker calculates EMA 9/21/50, RSI(14), MACD histogram, ATR, relative volume, 20-candle breakout/breakdown, and selected candle patterns from one-minute crypto candles. Scores map to BUY (>=4), SELL (<=-4), or WATCH. These are research signals, not orders.
 
-The Python scanner separately uses a crypto market snapshot and may use Groq to propose a candidate. Its output is validated against observed crypto assets and prices before risk calculations.
+## Indian index coverage
+
+The dashboard provides TradingView charts for the four indices. The Worker does not yet generate one-minute index signals. Python can include the indices in its market snapshot when data is available; provider coverage and delays may vary.
 
 ## Risk and limitations
 
-Signals are not a validated profitable strategy. The project has no exchange execution, historical backtest with fees/slippage, or verified live performance statistics. Crypto trades 24/7 and can be highly volatile; treat all outputs as research signals and independently validate them.
+No historical backtest with fees/slippage or verified live performance statistics is provided. No exchange/broker orders are executed. Treat outputs as research, not financial advice.
