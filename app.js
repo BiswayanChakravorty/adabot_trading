@@ -6,7 +6,7 @@ const CONFIG={
     XRP:{symbol:"XRPUSDT",tv:"BINANCE:XRPUSDT"},
     Dogecoin:{symbol:"DOGEUSDT",tv:"BINANCE:DOGEUSDT"},
     "Nifty 50":{symbol:null,tv:"NSE:NIFTY",market:"india"},
-    "Nifty 500":{symbol:null,tv:"NSE:NIFTY500",market:"india"},
+    "Nifty 500":{symbol:null,tv:"NSE:CNX500",market:"india"},
     Sensex:{symbol:null,tv:"BSE:SENSEX",market:"india"},
     "Bank Nifty":{symbol:null,tv:"NSE:BANKNIFTY",market:"india"}
   },
@@ -202,9 +202,9 @@ function connectStream(){
 function scheduleReconnect(){clearTimeout(S.reconnectTimer);S.reconnectTimer=setTimeout(()=>connectStream(),5000)}
 async function loadServer(){try{const r=await fetch("./dashboard_data.json?t="+Date.now(),{cache:"no-store"});if(!r.ok)throw Error("server snapshot unavailable");S.data=await r.json();renderServerData()}catch(e){console.warn(e);setText("last-updated","Live browser agent active")}}
 
-function setMarket(market){S.market=market;document.querySelector(".dashboard")?.classList.toggle("market-penny",market==="penny");document.querySelector(".dashboard")?.classList.toggle("market-indices",market==="indices");document.querySelectorAll(".market-tab").forEach(b=>b.classList.toggle("active",b.dataset.market===market));document.querySelectorAll("[data-market-panel]").forEach(el=>{el.hidden=el.dataset.marketPanel!==market});document.querySelectorAll("[data-agent-card]").forEach(el=>el.classList.toggle("active",el.dataset.agentCard===market));}
+function setMarket(market){const previous=S.market;S.market=market;document.querySelector(".dashboard")?.classList.toggle("market-penny",market==="penny");document.querySelector(".dashboard")?.classList.toggle("market-indices",market==="indices");document.querySelectorAll(".market-tab").forEach(b=>b.classList.toggle("active",b.dataset.market===market));document.querySelectorAll("[data-market-panel]").forEach(el=>{el.hidden=el.dataset.marketPanel!==market});document.querySelectorAll("[data-agent-card]").forEach(el=>el.classList.toggle("active",el.dataset.agentCard===market));if(market==="indices"&&!CONFIG.assets[S.asset]?.market){select("Nifty 50")}else if(market==="crypto"&&CONFIG.assets[S.asset]?.market==="india"){select("Bitcoin")}}
 document.querySelectorAll(".market-tab").forEach(b=>b.addEventListener("click",()=>setMarket(b.dataset.market)));
-document.querySelectorAll(".asset-chip,.index-chip").forEach(b=>b.onclick=()=>select(b.dataset.asset));
+document.querySelectorAll(".asset-chip,.index-chip,.index-agent-tile").forEach(b=>b.onclick=()=>select(b.dataset.asset));
 setMarket("crypto");
 $("#refresh-btn").onclick=()=>scanAll("manual");
 $("#notify-btn").onclick=enableNotifications;
