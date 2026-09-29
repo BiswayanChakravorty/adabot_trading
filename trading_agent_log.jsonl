@@ -73,3 +73,4 @@
 {"status": "no_trade", "market_snapshot": [{"asset": "Bitcoin", "type": "crypto", "price": 8027050.0, "24h_change_pct": 0.51, "30d_change_pct": 6.75}, {"asset": "Ethereum", "type": "crypto", "price": 257499.0, "24h_change_pct": 1.08, "30d_change_pct": 8.94}, {"asset": "XRP", "type": "crypto", "price": 143.89, "24h_change_pct": 0.89, "30d_change_pct": 7.22}, {"asset": "Solana", "type": "crypto", "price": 11381.61, "24h_change_pct": -0.52, "30d_change_pct": 12.45}, {"asset": "Dogecoin", "type": "crypto", "price": 9.04, "24h_change_pct": 0.69, "30d_change_pct": 10.52}], "ai_response": null, "timestamp": "2026-09-29T06:09:35.645071+00:00"}
 {"status": "error", "message": "No market data retrieved.", "timestamp": "2026-09-29T12:47:11.524354+00:00"}
 {"status": "error", "message": "No market data retrieved.", "timestamp": "2026-09-29T18:19:08.268409+00:00"}
+{"status": "error", "message": "No market data retrieved.", "timestamp": "2026-09-29T22:23:44.887518+00:00"}
