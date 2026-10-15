@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-15T19:28:28.761241+00:00",
+  "generated_at": "2026-10-15T22:35:24.823364+00:00",
   "refresh_interval_minutes": 60,
   "default_asset": "Bitcoin",
   "agent": {
@@ -13,53 +13,41 @@
     {
       "asset": "Bitcoin",
       "type": "crypto",
-      "price": 7815887.0,
-      "24h_change_pct": 0.49,
-      "30d_change_pct": 7.01
+      "price": 7789988.0,
+      "24h_change_pct": 0.37,
+      "30d_change_pct": 8.49
     },
     {
       "asset": "Ethereum",
       "type": "crypto",
-      "price": 232728.0,
-      "24h_change_pct": 0.59,
-      "30d_change_pct": 0.33
+      "price": 232251.0,
+      "24h_change_pct": 1.04,
+      "30d_change_pct": 2.13
     },
     {
       "asset": "XRP",
       "type": "crypto",
-      "price": 127.56,
-      "24h_change_pct": 0.84,
-      "30d_change_pct": -4.54
+      "price": 126.62,
+      "24h_change_pct": -0.2,
+      "30d_change_pct": 3.56
     },
     {
       "asset": "Solana",
       "type": "crypto",
-      "price": 10048.34,
-      "24h_change_pct": 1.09,
-      "30d_change_pct": 5.65
+      "price": 10002.09,
+      "24h_change_pct": 0.6,
+      "30d_change_pct": 8.76
     },
     {
       "asset": "Dogecoin",
       "type": "crypto",
-      "price": 7.73,
-      "24h_change_pct": -1.13,
-      "30d_change_pct": -1.01
+      "price": 7.7,
+      "24h_change_pct": -1.12,
+      "30d_change_pct": 1.19
     }
   ],
   "chart_history": {
     "Bitcoin": [
-      {
-        "time": 1789502400,
-        "value": 76112.81468027529
-      },
-      {
-        "time": 1789506000,
-        "value": 75886.40225495906
-      },
-      {
-        "time": 1789509600,
-        "value": 75383.70543389375
-      },
       {
         "time": 1789513200,
         "value": 75645.58490916989
@@ -2929,23 +2917,23 @@
         "value": 82336.72255617275
       },
       {
-        "time": 1792092390,
-        "value": 82479.47427320582
+        "time": 1792094400,
+        "value": 82308.82928743072
+      },
+      {
+        "time": 1792098000,
+        "value": 82012.69918474372
+      },
+      {
+        "time": 1792101600,
+        "value": 82350.6277249649
+      },
+      {
+        "time": 1792103620,
+        "value": 82394.27722741314
       }
     ],
     "Ethereum": [
-      {
-        "time": 1789502400,
-        "value": 2414.1402475319305
-      },
-      {
-        "time": 1789506000,
-        "value": 2406.411617915964
-      },
-      {
-        "time": 1789509600,
-        "value": 2389.138337340514
-      },
       {
         "time": 1789513200,
         "value": 2396.3566614857773
@@ -5815,23 +5803,23 @@
         "value": 2449.0541701613374
       },
       {
-        "time": 1792092390,
-        "value": 2455.568186663664
+        "time": 1792094400,
+        "value": 2451.19989268422
+      },
+      {
+        "time": 1792098000,
+        "value": 2451.3556587107414
+      },
+      {
+        "time": 1792101600,
+        "value": 2459.2626150419533
+      },
+      {
+        "time": 1792103610,
+        "value": 2456.5026472772465
       }
     ],
     "Solana": [
-      {
-        "time": 1789502400,
-        "value": 97.8487426958034
-      },
-      {
-        "time": 1789506000,
-        "value": 97.3548290419389
-      },
-      {
-        "time": 1789509600,
-        "value": 96.49367578156092
-      },
       {
         "time": 1789513200,
         "value": 97.10556722116783
@@ -8701,27 +8689,23 @@
         "value": 105.87551350364635
       },
       {
-        "time": 1792092400,
-        "value": 106.03795978909962
+        "time": 1792094400,
+        "value": 105.91909861558756
+      },
+      {
+        "time": 1792098000,
+        "value": 105.53507985524777
+      },
+      {
+        "time": 1792101600,
+        "value": 105.95785404808703
+      },
+      {
+        "time": 1792103620,
+        "value": 105.79154035408791
       }
     ],
     "XRP": [
-      {
-        "time": 1789498800,
-        "value": 1.3256679804732485
-      },
-      {
-        "time": 1789502400,
-        "value": 1.296280034355559
-      },
-      {
-        "time": 1789506000,
-        "value": 1.2931838584853281
-      },
-      {
-        "time": 1789509600,
-        "value": 1.2764199188777487
-      },
       {
         "time": 1789513200,
         "value": 1.288423944743525
@@ -11587,8 +11571,24 @@
         "value": 1.3395496967445923
       },
       {
-        "time": 1792092410,
-        "value": 1.3462217018956717
+        "time": 1792090800,
+        "value": 1.3420491258645386
+      },
+      {
+        "time": 1792094400,
+        "value": 1.3432946507039007
+      },
+      {
+        "time": 1792098000,
+        "value": 1.3380388684014781
+      },
+      {
+        "time": 1792101600,
+        "value": 1.3399061574390405
+      },
+      {
+        "time": 1792103630,
+        "value": 1.3393399218482798
       }
     ]
   },
@@ -11603,45 +11603,45 @@
     ],
     "evaluations": {
       "Bitcoin": {
-        "consensus": "WAIT",
-        "buy_votes": 2,
+        "consensus": "BUY",
+        "buy_votes": 3,
         "total_strategies": 5,
         "strategies": {
           "trend": "WAIT",
-          "momentum": "WAIT",
+          "momentum": "BUY",
           "macd": "BUY",
           "breakout": "BUY",
           "mean_reversion": "WAIT"
         },
         "indicators": {
-          "price": 82479.47427320582,
-          "ema21": 81705.82337439078,
-          "ema50": 82029.27851364306,
-          "macd": 46.42035602472606,
-          "macd_signal": -188.60132715079817,
-          "rsi": 68.52498070311498,
+          "price": 82394.27722741314,
+          "ema21": 81833.10045575001,
+          "ema50": 82049.1646079894,
+          "macd": 124.52880807011388,
+          "macd_signal": -52.10266330593201,
+          "rsi": 61.6830914854911,
           "recent_high": 82367.01130641192
         }
       },
       "Ethereum": {
         "consensus": "WAIT",
-        "buy_votes": 2,
+        "buy_votes": 1,
         "total_strategies": 5,
         "strategies": {
           "trend": "WAIT",
           "momentum": "WAIT",
           "macd": "BUY",
-          "breakout": "BUY",
+          "breakout": "WAIT",
           "mean_reversion": "WAIT"
         },
         "indicators": {
-          "price": 2455.568186663664,
-          "ema21": 2409.8375119592674,
-          "ema50": 2432.4458695028293,
-          "macd": 1.2588825795742196,
-          "macd_signal": -13.102325528944439,
-          "rsi": 76.70823678144248,
-          "recent_high": 2449.0541701613374
+          "price": 2456.5026472772465,
+          "ema21": 2420.9854757107496,
+          "ema50": 2434.9322761035087,
+          "macd": 8.814620432524862,
+          "macd_signal": -3.3912002488264563,
+          "rsi": 74.28175250805168,
+          "recent_high": 2459.2626150419533
         }
       },
       "Solana": {
@@ -11650,19 +11650,19 @@
         "total_strategies": 5,
         "strategies": {
           "trend": "WAIT",
-          "momentum": "WAIT",
+          "momentum": "BUY",
           "macd": "BUY",
-          "breakout": "BUY",
+          "breakout": "WAIT",
           "mean_reversion": "WAIT"
         },
         "indicators": {
-          "price": 106.03795978909962,
-          "ema21": 104.29566424937924,
-          "ema50": 105.01073817215661,
-          "macd": 0.221556913177281,
-          "macd_signal": -0.30822660260363705,
-          "rsi": 75.38107344463617,
-          "recent_high": 105.94984113176274
+          "price": 105.79154035408791,
+          "ema21": 104.65402479474821,
+          "ema50": 105.09189035868874,
+          "macd": 0.4013943152803421,
+          "macd_signal": 0.013691758523163358,
+          "rsi": 65.72730961750344,
+          "recent_high": 105.95785404808703
         }
       },
       "XRP": {
@@ -11672,25 +11672,31 @@
         "strategies": {
           "trend": "WAIT",
           "momentum": "BUY",
-          "macd": "WAIT",
-          "breakout": "BUY",
+          "macd": "BUY",
+          "breakout": "WAIT",
           "mean_reversion": "WAIT"
         },
         "indicators": {
-          "price": 1.3462217018956717,
-          "ema21": 1.3245310438903843,
-          "ema50": 1.3366751589266972,
-          "macd": -0.0011529560759100388,
-          "macd_signal": -0.007141786957689725,
-          "rsi": 58.32129100427939,
-          "recent_high": 1.3395496967445923
+          "price": 1.3393399218482798,
+          "ema21": 1.3291853343619475,
+          "ema50": 1.3370415594909817,
+          "macd": 0.002349994070973027,
+          "macd_signal": -0.0020569883459802176,
+          "rsi": 61.14866231195193,
+          "recent_high": 1.3432946507039007
         }
       }
     },
-    "candidates": []
+    "candidates": [
+      {
+        "asset": "Bitcoin",
+        "buy_votes": 3,
+        "total_strategies": 5
+      }
+    ]
   },
   "latest_signal": {
-    "timestamp": "2026-10-15T19:28:28.761241+00:00",
+    "timestamp": "2026-10-15T22:35:24.823364+00:00",
     "status": "no_trade",
     "asset": null,
     "action": "SKIP",
@@ -13480,6 +13486,18 @@
     },
     {
       "timestamp": "2026-10-15T19:28:28.761241+00:00",
+      "status": "no_trade",
+      "asset": null,
+      "action": "SKIP",
+      "entry_price": null,
+      "observed_price": null,
+      "target_price": null,
+      "stop_loss_price": null,
+      "risk_reward_ratio": null,
+      "rationale": ""
+    },
+    {
+      "timestamp": "2026-10-15T22:35:24.823364+00:00",
       "status": "no_trade",
       "asset": null,
       "action": "SKIP",
